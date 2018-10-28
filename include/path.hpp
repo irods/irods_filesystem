@@ -1,5 +1,7 @@
-#ifndef IRODS_PATH_HPP
-#define IRODS_PATH_HPP
+#ifndef IRODS_FILESYSTEM_PATH_HPP
+#define IRODS_FILESYSTEM_PATH_HPP
+
+#include <string>
 
 namespace irods {
 namespace filesystem {
@@ -26,46 +28,46 @@ public:
 
     // Assignments
 
-    path& operator=(const path& _p);
-    path& operator=(path&& _p) noexcept;
+    auto operator=(const path& _p) -> path&;
+    auto operator=(path&& _p) noexcept -> path&;
 
     template <typename Source>
-    path& operator=(const Source& _source);
+    auto operator=(const Source& _source) -> path&;
 
     template <typename Source>
-    path& assign(const Source& _source);
+    auto assign(const Source& _source) -> path&;
 
     template <typename InputIterator>
-    path& assign(InputIterator _begin, InputIterator _end);
+    auto assign(InputIterator _begin, InputIterator _end) -> path&;
 
     // Appends
 
-    path& operator/=(const path& _p);
+    auto operator/=(const path& _p) -> path&;
 
     template <typename Source>
-    path& operator/=(const Source& _source);
+    auto operator/=(const Source& _source) -> path&;
 
     template <typename Source>
-    path& append(const Source& _source);
+    auto append(const Source& _source) -> path&;
 
     template <typename InputIterator>
-    path& append(InputIterator _begin, InputIterator _end);
+    auto append(InputIterator _begin, InputIterator _end) -> path&;
 
     // Concatenation
 
-    path& operator+=(const path& _p);
-    path& operator+=(const std::string& _p);
-    path& operator+=(const char* _p);
-    path& operator+=(char _p);
+    auto operator+=(const path& _p) -> path&;
+    auto operator+=(const std::string& _p) -> path&;
+    auto operator+=(const char* _p) -> path&;
+    auto operator+=(char _p) -> path&;
 
     template <typename Source>
-    path& operator+=(const Source& _p);
+    auto operator+=(const Source& _p) -> path&;
 
     template <typename CharT>
-    path& operator+=(CharT _p);
+    auto operator+=(CharT _p) -> path&;
 
     template <typename InputIterator>
-    path& concat(InputIterator _begin, InputIterator _end);
+    auto concat(InputIterator _begin, InputIterator _end) -> path&;
 
     // Modifiers
 
@@ -139,4 +141,4 @@ private:
 } // namespace filesystem
 } // namespace irods
 
-#endif // IRODS_PATH_HPP
+#endif // IRODS_FILESYSTEM_PATH_HPP

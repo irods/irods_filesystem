@@ -1,6 +1,12 @@
 #ifndef IRODS_FILESYSTEM_HPP
 #define IRODS_FILESYSTEM_HPP
 
+#include <string>
+#include <istream>
+#include <ostream>
+#include <ctime> // TODO Prefer chrono instead!
+#include <cstdint>
+
 namespace irods {
 namespace filesystem {
 
@@ -55,14 +61,26 @@ enum class object_type
 enum class perms
 {
     no_perms,
-    owner_read, owner_write, owner_exe, owner_all,
-    group_read, group_write, group_exe, group_all,
-    others_read, others,write, others_exe, others_all,
+    owner_read,
+    owner_write,
+    owner_exe,
+    owner_all,
+    group_read,
+    group_write,
+    group_exe,
+    group_all,
+    others_read,
+    others_write,
+    others_exe,
+    others_all,
     all_all,
-    set_uid_on_exe, set_gid_on_exe, sticky_bit,
+    set_uid_on_exe,
+    set_gid_on_exe,
+    sticky_bit,
     perms_mask,
     perms_not_known,
-    add_perms, remove_perms
+    add_perms,
+    remove_perms
 };
 
 class object_status;
