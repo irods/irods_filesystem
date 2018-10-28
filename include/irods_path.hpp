@@ -17,7 +17,7 @@ public:
     path(path&& _p) noexcept;
 
     template <typename Source>
-    path(Source&& _source);
+    path(const Source& _source);
 
     template <typename InputIterator>
     path(InputIterator _begin, InputIterator _end);
