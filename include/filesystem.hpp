@@ -15,6 +15,7 @@ class filesystem_error;
 class collection_entry;
 class collection_iterator;
 class recursive_collection_iterator;
+class object_status;
 
 bool lexicographical_compare(path::iterator _first1,
                              path::iterator _last1,
@@ -79,8 +80,6 @@ enum class perms
     add_perms,
     remove_perms
 };
-
-class object_status;
 
 struct space_info // Returned by space function.
 {
