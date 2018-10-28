@@ -11,6 +11,10 @@ namespace irods {
 namespace filesystem {
 
 class path;
+class filesystem_error;
+class collection_entry;
+class collection_iterator;
+class recursive_collection_iterator;
 
 bool lexicographical_compare(path::iterator _first1,
                              path::iterator _last1,
@@ -30,21 +34,14 @@ bool operator>=(const path& _lhs, const path& _rhs);
 
 bool operator/ (const path& _lhs, const path& _rhs);
 
-std::ostream& operator<<(std::ostream& _os, const path& _p);
-std::istream& operator>>(std::ostream& _is, const path& _p);
-
-class filesystem_error;
-class collection_entry;
-
-class collection_iterator;
+auto operator<<(std::ostream& _os, const path& _p) -> std::ostream&;
+auto operator>>(std::ostream& _is, const path& _p) -> std::istream&;
 
 // Enable C++11 range-based for statements.
+
 auto begin(const collection_iterator& _iter) -> const collection_iterator&;
 auto end(const collection_iterator&) -> collection_iterator;
 
-class recursive_collection_iterator;
-
-// Enable C++11 range-based for statements.
 auto begin(const recursive_collection_iterator& _iter) -> const recursive_collection_iterator&;
 auto end(const recursive_collection_iterator&) -> recursive_collection_iterator;
 
@@ -99,9 +96,7 @@ enum class copy_option
     overwrite_if_exists
 };
 
-//
-// Operational Functions.
-//
+// Operational functions
 
 path absolute(const path& _p, const path& base = current_path());
 
