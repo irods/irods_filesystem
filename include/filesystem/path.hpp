@@ -14,12 +14,13 @@ namespace irods::filesystem
         class iterator;
         class reverse_iterator;
 
-        using value_type                = std::string::value_type;
-        using string_type               = std::string;
+        using value_type                = char;
+        using string_type               = std::basic_string<value_type>;
         using const_iterator            = iterator;
         using const_reverse_iterator    = reverse_iterator;
 
         inline static constexpr char dot       = '.';
+        inline static constexpr char dot_dot   = "..";
         inline static constexpr char separator = '/';
 
         // Constructors and destructor
@@ -27,6 +28,16 @@ namespace irods::filesystem
         path() = default;
         path(const path& _p) = default;
         path(path&& _p) noexcept = default;
+
+        path(const value_type* _source)
+            : value_{_source}
+        {
+        }
+
+        path(string_type&& _source) noexcept
+            : value_{std::move(_source)}
+        {
+        }
 
         // Delegating constructor
         template <typename Source,
@@ -202,9 +213,9 @@ namespace irods::filesystem
 
         // Query
 
-        auto empty() const -> bool;
-        auto data_object_is_dot() const -> bool;
-        auto data_object_is_dot_dot() const -> bool;
+        auto empty() const -> bool                      { return value_.empty(); }
+        auto data_object_is_dot() const -> bool         { return dot == value_; }
+        auto data_object_is_dot_dot() const -> bool     { return dot_dot == value_; }
         auto has_root_name() const -> bool;
         auto has_root_collection() const -> bool;
         auto has_root_path() const -> bool;
@@ -213,8 +224,8 @@ namespace irods::filesystem
         auto has_data_object_name() const -> bool;
         auto has_stem() const -> bool;
         auto has_extension() const -> bool;
-        auto is_absolute() const -> bool;
-        auto is_relative() const -> bool;
+        auto is_absolute() const -> bool                { return '/' == *std::cbegin(*this); }
+        auto is_relative() const -> bool                { return !is_absolute(); }
 
         // Iterators
 
