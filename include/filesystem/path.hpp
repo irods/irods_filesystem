@@ -19,9 +19,9 @@ namespace irods::filesystem
         using const_iterator            = iterator;
         using const_reverse_iterator    = reverse_iterator;
 
-        inline static constexpr char dot       = '.';
-        inline static constexpr char dot_dot   = "..";
-        inline static constexpr char separator = '/';
+        inline static const char dot       = '.';
+        inline static const char dot_dot[] = "..";
+        inline static const char separator = '/';
 
         // Constructors and destructor
 
@@ -213,9 +213,9 @@ namespace irods::filesystem
 
         // Query
 
-        auto empty() const -> bool                      { return value_.empty(); }
-        auto data_object_is_dot() const -> bool         { return dot == value_; }
-        auto data_object_is_dot_dot() const -> bool     { return dot_dot == value_; }
+        auto empty() const -> bool                          { return value_.empty(); }
+        auto data_object_name_is_dot() const -> bool        { return dot == data_object_name(); }
+        auto data_object_name_is_dot_dot() const -> bool    { return dot_dot == data_object_name(); }
         auto has_root_name() const -> bool;
         auto has_root_collection() const -> bool;
         auto has_root_path() const -> bool;
@@ -224,8 +224,8 @@ namespace irods::filesystem
         auto has_data_object_name() const -> bool;
         auto has_stem() const -> bool;
         auto has_extension() const -> bool;
-        auto is_absolute() const -> bool                { return '/' == *std::cbegin(*this); }
-        auto is_relative() const -> bool                { return !is_absolute(); }
+        auto is_absolute() const -> bool                    { return separator == *std::cbegin(*this); }
+        auto is_relative() const -> bool                    { return !is_absolute(); }
 
         // Iterators
 
