@@ -4,6 +4,8 @@
 #include <string>
 #include <utility>
 
+#include <boost/algorithm/string.hpp>
+
 #include "irods/filesystem/path_traits.hpp"
 
 namespace irods::filesystem
@@ -19,9 +21,9 @@ namespace irods::filesystem
         using const_iterator            = iterator;
         using const_reverse_iterator    = reverse_iterator;
 
-        inline static const char dot       = '.';
-        inline static const char dot_dot[] = "..";
-        inline static const char separator = '/';
+        inline static const value_type dot[]     = ".";
+        inline static const value_type dot_dot[] = "..";
+        inline static const value_type separator = '/';
 
         // Constructors and destructor
 
@@ -137,8 +139,8 @@ namespace irods::filesystem
         auto operator+=(const path& _p) -> path&        { value_ += _p.value_; return *this; }
         auto operator+=(const string_type& _p) -> path& { value_ += _p; return *this; }
         auto operator+=(std::string_view _p) -> path&   { value_ += _p; return *this; }
-        auto operator+=(const char* _p) -> path&        { value_ += _p; return *this; }
-        auto operator+=(char _p) -> path&               { value_ += _p; return *this; }
+        auto operator+=(const value_type* _p) -> path&  { value_ += _p; return *this; }
+        auto operator+=(value_type _p) -> path&         { value_ += _p; return *this; }
 
         template <typename Source>
         auto operator+=(const Source& _p) -> path&
@@ -198,7 +200,7 @@ namespace irods::filesystem
 
         auto compare(const path& _p) const noexcept -> int;
         auto compare(const string_type& _p) const -> int;
-        auto compare(const char* _p) const -> int;
+        auto compare(const value_type* _p) const -> int;
 
         // Decomposition
 
@@ -213,19 +215,19 @@ namespace irods::filesystem
 
         // Query
 
-        auto empty() const -> bool                          { return value_.empty(); }
-        auto data_object_name_is_dot() const -> bool        { return dot == data_object_name(); }
-        auto data_object_name_is_dot_dot() const -> bool    { return dot_dot == data_object_name(); }
-        auto has_root_name() const -> bool;
-        auto has_root_collection() const -> bool;
-        auto has_root_path() const -> bool;
-        auto has_relative_path() const -> bool;
-        auto has_parent_path() const -> bool;
-        auto has_data_object_name() const -> bool;
-        auto has_stem() const -> bool;
-        auto has_extension() const -> bool;
-        auto is_absolute() const -> bool                    { return separator == *std::cbegin(*this); }
-        auto is_relative() const -> bool                    { return !is_absolute(); }
+        auto empty() const -> bool                       { return value_.empty(); }
+        auto data_object_name_is_dot() const -> bool     { return dot == data_object_name(); }
+        auto data_object_name_is_dot_dot() const -> bool { return dot_dot == data_object_name(); }
+        auto has_root_name() const -> bool               { return !root_name().empty(); }
+        auto has_root_collection() const -> bool         { return !root_collection().empty(); }
+        auto has_root_path() const -> bool               { return !root_path().empty(); }
+        auto has_relative_path() const -> bool           { return !relative_path().empty(); }
+        auto has_parent_path() const -> bool             { return !parent_path().empty(); }
+        auto has_data_object_name() const -> bool        { return !data_object_name().empty(); }
+        auto has_stem() const -> bool                    { return !stem().empty(); }
+        auto has_extension() const -> bool               { return !extension().empty(); }
+        auto is_absolute() const -> bool                 { return separator == value_.front(); }
+        auto is_relative() const -> bool                 { return !is_absolute(); }
 
         // Iterators
 
@@ -240,7 +242,7 @@ namespace irods::filesystem
         {
             if (value_.empty() ||
                 separator == value_.back() ||
-                separator == std::cbegin(_p))
+                separator == _p.value_.front())
             {
                 return;
             }
@@ -251,7 +253,51 @@ namespace irods::filesystem
         string_type value_;
     };
 
-#include "irods_path.tpp"
+    class path::iterator
+    {
+    public:
+        using value_type        = path;
+        using pointer           = value_type*;
+        using reference         = value_type&;
+        using difference_type   = std::ptrdiff_t;
+        using iterator_category = std::bidirectional_iterator_tag;
+
+        iterator();
+
+        iterator(const iterator& _other);
+        auto operator=(const iterator& _other) -> iterator&;
+
+        iterator(iterator&& _other);
+        auto operator=(iterator&& _other) -> iterator&;
+
+        ~iterator();
+
+        auto operator==(const iterator& _other) -> bool;
+        auto operator!=(const iterator& _other) -> bool;
+
+        auto operator*() -> reference;
+        auto operator->() -> pointer;
+
+        auto operator++() -> iterator&;
+        auto operator++(int) -> iterator;
+        auto operator--() -> iterator&;
+        auto operator--(int) -> iterator;
+
+        auto swap(iterator& _other);
+
+    private:
+        path& path_;
+        boost::split_iterator<
+    };
+
+    class path::reverse_iterator
+    {
+    public:
+
+    private:
+    };
+
+//#include "irods_path.tpp"
 
 } // namespace irods::filesystem
 
