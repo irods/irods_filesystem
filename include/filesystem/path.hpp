@@ -204,9 +204,9 @@ namespace irods::filesystem
 
         // Decomposition
 
-        auto root_name() const -> path;
+        auto root_name() const -> path              { return {}; }
         auto root_collection() const -> path;
-        auto root_path() const -> path;
+        auto root_path() const -> path              { return root_name() / root_collection(); }
         auto relative_path() const -> path;
         auto parent_path() const -> path;
         auto data_object_name() const -> path;
@@ -231,8 +231,8 @@ namespace irods::filesystem
 
         // Iterators
 
-        auto begin() const -> iterator;
-        auto end() const -> iterator;
+        auto begin() const -> iterator  { return iterator{*this}; }
+        auto end() const -> iterator    { iterator it{*this}; it.pos_ = value_.size(); return it; }
 
         auto rbegin() const -> reverse_iterator;
         auto rend() const -> reverse_iterator;
@@ -257,37 +257,98 @@ namespace irods::filesystem
     {
     public:
         using value_type        = path;
-        using pointer           = value_type*;
-        using reference         = value_type&;
+        using pointer           = const value_type*;
+        using reference         = const value_type&;
         using difference_type   = std::ptrdiff_t;
         using iterator_category = std::bidirectional_iterator_tag;
 
-        iterator();
+        iterator() = default;
 
-        iterator(const iterator& _other);
-        auto operator=(const iterator& _other) -> iterator&;
+        explicit iterator(const path& _p)
+            : path_{&_p}
+            , element_{}
+            , pos_{}
+        {
+            if (path_->empty()) {
+                return;
+            }
 
-        iterator(iterator&& _other);
-        auto operator=(iterator&& _other) -> iterator&;
+            // Does the path contain a leading forward slash "/"?
+            //if (path::separator == value[0]) {
+            if (path_->has_root_path()) {
+                element_.value_ = &path::separator;
+            }
+            else {
+                const auto& full_path = path_->value_;
+                const auto end = full_path.find_first_of('/');
 
-        ~iterator();
+                element_.value_ = (path::string_type::npos != end)
+                    ? full_path.substr(0, end)
+                    : full_path;
+            }
+        }
 
-        auto operator==(const iterator& _other) -> bool;
-        auto operator!=(const iterator& _other) -> bool;
+        iterator(const iterator& _other) = default;
+        auto operator=(const iterator& _other) -> iterator& = default;
 
-        auto operator*() -> reference;
-        auto operator->() -> pointer;
+        iterator(iterator&& _other) = default;
+        auto operator=(iterator&& _other) -> iterator& = default;
 
-        auto operator++() -> iterator&;
-        auto operator++(int) -> iterator;
-        auto operator--() -> iterator&;
-        auto operator--(int) -> iterator;
+        ~iterator() = default;
+
+        auto operator==(const iterator& _other) -> bool { return path_ == _other.path_ && pos_ == _other.pos_; }
+        auto operator!=(const iterator& _other) -> bool { return !(_other == *this); }
+
+        auto operator* () -> reference  { return element_; }
+        auto operator->() -> pointer    { return &element_; }
+
+        auto operator++() -> iterator&
+        {
+            pos_ += element_.value_.size();
+
+            const auto& full_path = path_->value;
+
+            if (pos_ < full_path.size() && path::separator == full_path[pos_]) {
+                ++pos_;
+            }
+
+            const auto end = full_path.find_first_of('/', pos_);
+
+            element_.value_ = (std::string::npos != end)
+                ? full_path.substr(pos_, end - pos_)
+                : full_path.substr(pos_);
+
+            return *this;
+        }
+
+        auto operator++(int) -> iterator
+        {
+            auto it = *this;
+            ++(*this);
+            return it;
+        }
+
+        auto operator--() -> iterator&
+        {
+            return *this;
+        }
+
+        auto operator--(int) -> iterator
+        {
+            auto it = *this;
+            --(*this);
+            return it;
+        }
+
 
         auto swap(iterator& _other);
 
+        friend class path;
+
     private:
-        path& path_;
-        boost::split_iterator<
+        const path* path_;
+        path element_;
+        path::string_type::size_type pos_;
     };
 
     class path::reverse_iterator
