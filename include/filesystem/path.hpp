@@ -142,7 +142,8 @@ namespace irods::filesystem
         auto operator+=(const value_type* _p) -> path&  { value_ += _p; return *this; }
         auto operator+=(value_type _p) -> path&         { value_ += _p; return *this; }
 
-        template <typename Source>
+        template <typename Source,
+                  typename = std::enable_if_t<path_traits::is_pathable_v<Source>>>
         auto operator+=(const Source& _p) -> path&
         {
             return *this += path{_p};
@@ -166,10 +167,9 @@ namespace irods::filesystem
             value_.clear();
         }
 
-        auto remove_data_object_name() -> path&
+        auto remove_object_name() -> path&
         {
-            return *this;
-            //return *this = parent_path();
+            return *this = parent_path();
         }
 
         auto replace_extension(const path& _new_extension = {}) -> path&
@@ -199,8 +199,8 @@ namespace irods::filesystem
         // Compare
 
         auto compare(const path& _p) const noexcept -> int;
-        auto compare(const string_type& _p) const -> int;
-        auto compare(const value_type* _p) const -> int;
+        auto compare(const string_type& _p) const -> int        { return compare(path{_p}); }
+        auto compare(const value_type* _p) const -> int         { return compare(path{_p}); }
 
         // Decomposition
 
@@ -209,21 +209,21 @@ namespace irods::filesystem
         auto root_path() const -> path              { return root_name() / root_collection(); }
         auto relative_path() const -> path;
         auto parent_path() const -> path;
-        auto data_object_name() const -> path;
+        auto object_name() const -> path;
         auto stem() const -> path;
         auto extension() const -> path;
 
         // Query
 
         auto empty() const -> bool                       { return value_.empty(); }
-        auto data_object_name_is_dot() const -> bool     { return dot == data_object_name(); }
-        auto data_object_name_is_dot_dot() const -> bool { return dot_dot == data_object_name(); }
+        auto object_name_is_dot() const -> bool          { return dot == object_name(); }
+        auto object_name_is_dot_dot() const -> bool      { return dot_dot == object_name(); }
         auto has_root_name() const -> bool               { return !root_name().empty(); }
         auto has_root_collection() const -> bool         { return !root_collection().empty(); }
         auto has_root_path() const -> bool               { return !root_path().empty(); }
         auto has_relative_path() const -> bool           { return !relative_path().empty(); }
         auto has_parent_path() const -> bool             { return !parent_path().empty(); }
-        auto has_data_object_name() const -> bool        { return !data_object_name().empty(); }
+        auto has_object_name() const -> bool             { return !object_name().empty(); }
         auto has_stem() const -> bool                    { return !stem().empty(); }
         auto has_extension() const -> bool               { return !extension().empty(); }
         auto is_absolute() const -> bool                 { return separator == value_.front(); }
@@ -231,8 +231,18 @@ namespace irods::filesystem
 
         // Iterators
 
-        auto begin() const -> iterator  { return iterator{*this}; }
-        auto end() const -> iterator    { iterator it{*this}; it.pos_ = value_.size(); return it; }
+        auto begin() const -> iterator
+        {
+            return iterator{*this};
+        }
+
+        auto end() const -> iterator
+        {
+            iterator it;
+            it.path_ = this;
+            it.pos_ = value_.size();
+            return it;
+        }
 
         auto rbegin() const -> reverse_iterator;
         auto rend() const -> reverse_iterator;
