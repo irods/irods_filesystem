@@ -9,7 +9,12 @@ namespace irods::filesystem
 
     auto path::root_collection() const -> path
     {
-        return {};
+        if (empty())
+        {
+            return {};
+        }
+
+        return is_absolute() ? *begin() : path{};
     }
 
     auto path::relative_path() const -> path
@@ -193,7 +198,8 @@ namespace irods::filesystem
 
         const auto end = pos_;
 
-        while (pos_ > 0 && !detail::is_separator(fp[pos_ - 1])) {
+        while (pos_ > 0 && !detail::is_separator(fp[pos_ - 1]))
+        {
             --pos_;
         }
 
