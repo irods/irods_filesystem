@@ -3,10 +3,9 @@
 
 #include <string>
 #include <utility>
+#include <type_traits>
 
-#include <boost/algorithm/string.hpp>
-
-#include "irods/filesystem/path_traits.hpp"
+#include <irods/filesystem/path_traits.hpp>
 
 namespace irods::filesystem
 {
@@ -204,9 +203,9 @@ namespace irods::filesystem
 
         // Decomposition
 
-        auto root_name() const -> path              { return {}; }
+        //auto root_name() const -> path              { return {}; }
         auto root_collection() const -> path;
-        auto root_path() const -> path              { return root_name() /= root_collection(); }
+        auto root_path() const -> path              { return /*root_name() /=*/ root_collection(); }
         auto relative_path() const -> path;
         auto parent_path() const -> path;
         auto object_name() const -> path;
@@ -218,7 +217,7 @@ namespace irods::filesystem
         auto empty() const -> bool                       { return value_.empty(); }
         auto object_name_is_dot() const -> bool          { return dot == object_name(); }
         auto object_name_is_dot_dot() const -> bool      { return dot_dot == object_name(); }
-        auto has_root_name() const -> bool               { return !root_name().empty(); }
+        //auto has_root_name() const -> bool               { return !root_name().empty(); }
         auto has_root_collection() const -> bool         { return !root_collection().empty(); }
         auto has_root_path() const -> bool               { return !root_path().empty(); }
         auto has_relative_path() const -> bool           { return !relative_path().empty(); }
@@ -231,44 +230,17 @@ namespace irods::filesystem
 
         // Iterators
 
-        auto begin() const -> iterator
-        {
-            return iterator{*this};
-        }
+        auto begin() const -> iterator;
+        auto end() const -> iterator;
 
-        auto end() const -> iterator
-        {
-            iterator it;
-            it.path_ = this;
-            it.pos_ = value_.size();
-            return it;
-        }
-
-        auto rbegin() const -> reverse_iterator
-        {
-            return reverse_iterator{end()};
-        }
-
-        auto rend() const -> reverse_iterator
-        {
-            return reverse_iterator{begin()};
-        }
+        auto rbegin() const -> reverse_iterator;
+        auto rend() const -> reverse_iterator;
 
     private:
-        void append_seperator_if_needed(const path& _p)
-        {
-            if (value_.empty() ||
-                separator == value_.back() ||
-                separator == _p.value_.front())
-            {
-                return;
-            }
-
-            value_ += separator;
-        }
+        void append_seperator_if_needed(const path& _p);
 
         string_type value_;
-    };
+    }; // path
 
     class path::iterator
     {
@@ -281,31 +253,7 @@ namespace irods::filesystem
 
         iterator() = default;
 
-        explicit iterator(const path& _p)
-            : path_ptr_{&_p}
-            , element_{}
-            , pos_{}
-        {
-            if (path_ptr_->empty())
-            {
-                return;
-            }
-
-            // Does the path contain a leading forward slash "/"?
-            if (path_ptr_->is_absolute())
-            {
-                element_.value_ = path::separator;
-            }
-            else
-            {
-                const auto& full_path = path_ptr_->value_;
-                const auto end = full_path.find_first_of(path::separator);
-
-                element_.value_ = (path::string_type::npos != end)
-                    ? full_path.substr(0, end)
-                    : full_path;
-            }
-        }
+        explicit iterator(const path& _p);
 
         iterator(const iterator& _other) = default;
         auto operator=(const iterator& _other) -> iterator& = default;
@@ -321,105 +269,11 @@ namespace irods::filesystem
         auto operator*() const -> reference   { return element_; }
         auto operator->() const -> pointer    { return &element_; }
 
-        auto operator++() -> iterator&
-        {
-            const auto& fp = path_ptr_->value_; // Full path
-            auto& e = element_.value;           // Path element
+        auto operator++() -> iterator&;
+        auto operator++(int) -> iterator { auto it = *this; ++(*this); return it; }
 
-            // Skip the element currently pointed to.
-            pos_ += e.size();
-
-            // If we're at the end of the path, then we're done.
-            if (fp.size() == pos_)
-            {
-                e.clear();
-                return *this;
-            }
-
-            // If we're not at the end of the path, then we're most likely at a separator.
-            // Skip consecutive separators.
-            if (const auto start = fp.find_first_not_of(separator, pos_); path::npos != start)
-            {
-                // Found a character that is not a separator.
-                pos_ = start;
-
-                if (const auto end = fp.find_first_of(separator, pos_); path::npos != end)
-                {
-                    // Found a separator.
-                    e = fp.substr(start, end - start);
-                }
-                else
-                {
-                    // No trailing separator found.
-                    e = fp.substr(start, fp.size() - start);
-                }
-            }
-            else if (detail::is_separator(fp[fp.size() - 1]))
-            {
-                // Found a trailing separator.
-                e = path::dot;
-                pos_ = fp.size() - 1;
-            }
-
-            return *this;
-        }
-
-        auto operator++(int) -> iterator
-        {
-            auto it = *this;
-            ++(*this);
-            return it;
-        }
-
-        auto operator--() -> iterator&
-        {
-            const auto& fp = path_ptr_->value_; // Full path
-            auto& e = element_.value;           // Path element
-
-            // Handle trailing separator at the end of the path.
-            // If the iterator represents the end iterator and the character preceding it
-            // is a separator, then set the current element must be set to the dot path.
-            if (fp.size() == pos_ &&
-                fp.size() > 1 &&
-                detail::is_separator(fp[pos_ - 1]))
-            {
-                --pos_;
-                e = path::dot;
-                return *this;
-            }
-
-            if (detail::is_separator(fp[pos_ - 1]))
-            {
-                // We've reached the root separator of the path.
-                if (pos_ - 1 == 0)
-                {
-                    --pos_;
-                    e = separator;
-                    return *this;
-                }
-
-                // Point at the separator.
-                // Separators represent the end of a path element.
-                --pos_;
-            }
-
-            const auto end = pos_;
-
-            while (pos_ > 0 && !detail::is_separator(fp[pos_ - 1])) {
-                --pos_;
-            }
-
-            e = fp.substr(pos_, end - pos_);
-
-            return *this;
-        }
-
-        auto operator--(int) -> iterator
-        {
-            auto it = *this;
-            --(*this);
-            return it;
-        }
+        auto operator--() -> iterator&;
+        auto operator--(int) -> iterator { auto it = *this; --(*this); return it; }
 
     private:
         friend class path;
@@ -427,7 +281,7 @@ namespace irods::filesystem
         pointer path_ptr_;
         path element_;
         path::string_type::size_type pos_;
-    };
+    }; // iterator
 
     class path::reverse_iterator
     {
@@ -493,7 +347,7 @@ namespace irods::filesystem
     private:
         iterator it_;
         path element_;
-    };
+    }; // reverse_iterator
 
 //#include "irods_path.tpp"
 

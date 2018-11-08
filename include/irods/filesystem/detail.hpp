@@ -1,7 +1,7 @@
 #ifndef IRODS_FILESYSTEM_DETAIL_HPP
 #define IRODS_FILESYSTEM_DETAIL_HPP
 
-#include "path.hpp"
+#include <irods/filesystem/path.hpp>
 
 namespace irods::filesystem::detail
 {

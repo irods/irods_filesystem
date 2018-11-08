@@ -14,18 +14,18 @@ namespace irods::filesystem
         template <typename T>
         struct is_pathable { static constexpr bool value = false; };
 
+        // clang-format off
         template <> struct is_pathable<char*>             { static constexpr bool value = true; };
         template <> struct is_pathable<const char*>       { static constexpr bool value = true; };
         template <> struct is_pathable<std::string>       { static constexpr bool value = true; };
         template <> struct is_pathable<std::vector<char>> { static constexpr bool value = true; };
         template <> struct is_pathable<std::list<char>>   { static constexpr bool value = true; };
         template <> struct is_pathable<collection_entry>  { static constexpr bool value = true; };
+        // clang-format on
 
         template <typename T>
         constexpr bool is_pathable_v = is_pathable<T>::value;
-
     } // namespace path_traits
-
 } // namespace irods::filesystem
 
 #endif // IRODS_FILESYSTEM_PATH_TRAITS_HPP
