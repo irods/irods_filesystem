@@ -7,37 +7,20 @@
 #include <ctime> // TODO Prefer chrono instead!
 #include <cstdint>
 
-#include <irods/filesystem/path.hpp>
+//#include <irods/filesystem/path.hpp>
 
 namespace irods::filesystem
 {
-    //class path;
+    class path;
     class filesystem_error;
     class collection_entry;
     class collection_iterator;
     class recursive_collection_iterator;
     class object_status;
 
-    auto lexicographical_compare(path::iterator _first1,
-                                 path::iterator _last1,
-                                 path::iterator _first2,
-                                 path::iterator _last2) -> bool;
-
     auto swap(path& _lhs, path& _rhs) -> void;
 
     auto hash_value(const path& _p) -> std::size_t;
-
-    auto operator==(const path& _lhs, const path& _rhs) -> bool;
-    auto operator!=(const path& _lhs, const path& _rhs) -> bool;
-    auto operator< (const path& _lhs, const path& _rhs) -> bool;
-    auto operator<=(const path& _lhs, const path& _rhs) -> bool;
-    auto operator> (const path& _lhs, const path& _rhs) -> bool;
-    auto operator>=(const path& _lhs, const path& _rhs) -> bool;
-
-    auto operator/(const path& _lhs, const path& _rhs) -> bool;
-
-    //auto operator<<(std::ostream& _os, const path& _p) -> std::ostream&;
-    //auto operator>>(std::ostream& _is, const path& _p) -> std::istream&;
 
     // Enable C++11 range-based for statements.
 

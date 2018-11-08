@@ -22,6 +22,17 @@ namespace irods::filesystem
     // Path
     //
 
+    auto path::operator/=(const path& _p) -> path&
+    {
+        if (!_p.empty())
+        {
+            append_seperator_if_needed(_p);
+            value_ += _p.value_;
+        }
+
+        return *this;
+    }
+
     auto path::replace_extension(const path& _new_extension) -> path&
     {
         return *this;
@@ -269,6 +280,19 @@ namespace irods::filesystem
         e = fp.substr(pos_, end - pos_);
 
         return *this;
+    }
+
+    auto operator<<(std::ostream& _os, const path& _p) -> std::ostream&
+    {
+        return _os << _p.string();
+    }
+
+    auto operator>>(std::istream& _is, path& _p) -> std::istream&
+    {
+        path::string_type s;
+        _is >> s;
+        _p = s;
+        return _is;
     }
 } // namespace irods::filesystem
 

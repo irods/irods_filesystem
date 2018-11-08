@@ -4,6 +4,8 @@
 #include <string>
 #include <utility>
 #include <type_traits>
+#include <istream>
+#include <ostream>
 
 #include <irods/filesystem/path_traits.hpp>
 
@@ -13,7 +15,8 @@ namespace irods::filesystem
     {
     public:
         class iterator;
-        class reverse_iterator;
+        using reverse_iterator = std::reverse_iterator<iterator>;
+        //class reverse_iterator;
 
         using value_type                = char;
         using string_type               = std::basic_string<value_type>;
@@ -100,16 +103,7 @@ namespace irods::filesystem
 
         // Appends
 
-        auto operator/=(const path& _p) -> path&
-        {
-            if (!_p.empty())
-            {
-                append_seperator_if_needed(_p);
-                value_ += _p.value_;
-            }
-
-            return *this;
-        }
+        auto operator/=(const path& _p) -> path&;
 
         template <typename Source,
                   typename = std::enable_if_t<path_traits::is_pathable_v<Source>>>
@@ -186,17 +180,17 @@ namespace irods::filesystem
 
         // Format observers
 
-        operator const value_type*() const noexcept { return value_.c_str(); }
-        operator const string_type() const          { return value_; }
-        operator string_type() const                { return value_; }
+        //operator const value_type*() const noexcept { return value_.c_str(); }
+        //operator const string_type() const          { return value_; }
+        //operator string_type() const                { return value_; }
 
         auto string() const -> const string_type&   { return value_; }
 
         // Compare
 
-        auto compare(const path& _p) const noexcept -> int;
-        auto compare(const string_type& _p) const -> int        { return compare(path{_p}); }
-        auto compare(const value_type* _p) const -> int         { return compare(path{_p}); }
+        auto compare(const path& _p) const noexcept -> int  { return _p.value_.compare(value_); }
+        //auto compare(const string_type& _p) const -> int        { return compare(path{_p}); }
+        //auto compare(const value_type* _p) const -> int         { return compare(path{_p}); }
 
         // Decomposition
 
@@ -212,8 +206,8 @@ namespace irods::filesystem
         // Query
 
         auto empty() const -> bool                       { return value_.empty(); }
-        auto object_name_is_dot() const -> bool          { return dot == object_name(); }
-        auto object_name_is_dot_dot() const -> bool      { return dot_dot == object_name(); }
+        auto object_name_is_dot() const -> bool          { return dot == object_name().value_; }
+        auto object_name_is_dot_dot() const -> bool      { return dot_dot == object_name().value_; }
         //auto has_root_name() const -> bool               { return !root_name().empty(); }
         auto has_root_collection() const -> bool         { return !root_collection().empty(); }
         auto has_root_path() const -> bool               { return !root_path().empty(); }
@@ -280,6 +274,7 @@ namespace irods::filesystem
         path::string_type::size_type pos_;
     }; // iterator
 
+    /*
     class path::reverse_iterator
     {
     public:
@@ -345,6 +340,24 @@ namespace irods::filesystem
         iterator it_;
         path element_;
     }; // reverse_iterator
+    */
+
+    auto lexicographical_compare(path::iterator _first1,
+                                 path::iterator _last1,
+                                 path::iterator _first2,
+                                 path::iterator _last2) -> bool;
+
+    inline auto operator==(const path& _lhs, const path& _rhs) -> bool { return _lhs.compare(_rhs) == 0; }
+    inline auto operator!=(const path& _lhs, const path& _rhs) -> bool { return !(_lhs == _rhs); }
+    auto operator< (const path& _lhs, const path& _rhs) -> bool;
+    auto operator<=(const path& _lhs, const path& _rhs) -> bool;
+    auto operator> (const path& _lhs, const path& _rhs) -> bool;
+    auto operator>=(const path& _lhs, const path& _rhs) -> bool;
+
+    inline auto operator/(const path& _lhs, const path& _rhs) -> path { return path{_lhs} /= _rhs; }
+
+    auto operator<<(std::ostream& _os, const path& _p) -> std::ostream&;
+    auto operator>>(std::istream& _is, path& _p) -> std::istream&;
 
 //#include "irods_path.tpp"
 
