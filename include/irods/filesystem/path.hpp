@@ -15,8 +15,7 @@ namespace irods::filesystem
     {
     public:
         class iterator;
-        using reverse_iterator = std::reverse_iterator<iterator>;
-        //class reverse_iterator;
+        class reverse_iterator;
 
         using value_type                = char;
         using string_type               = std::basic_string<value_type>;
@@ -180,11 +179,9 @@ namespace irods::filesystem
 
         // Format observers
 
-        //operator const value_type*() const noexcept { return value_.c_str(); }
-        //operator const string_type() const          { return value_; }
-        //operator string_type() const                { return value_; }
-
-        auto string() const -> const string_type&   { return value_; }
+        auto c_str() const noexcept -> const value_type*    { return value_.c_str(); }
+        auto string() const -> string_type                  { return value_; }
+        operator string_type() const                        { return value_; }
 
         // Compare
 
@@ -274,7 +271,6 @@ namespace irods::filesystem
         path::string_type::size_type pos_;
     }; // iterator
 
-    /*
     class path::reverse_iterator
     {
     public:
@@ -340,7 +336,6 @@ namespace irods::filesystem
         iterator it_;
         path element_;
     }; // reverse_iterator
-    */
 
     auto lexicographical_compare(path::iterator _first1,
                                  path::iterator _last1,
@@ -358,6 +353,10 @@ namespace irods::filesystem
 
     auto operator<<(std::ostream& _os, const path& _p) -> std::ostream&;
     auto operator>>(std::istream& _is, path& _p) -> std::istream&;
+
+    auto swap(path& _lhs, path& _rhs) -> void;
+
+    auto hash_value(const path& _p) -> std::size_t;
 
 //#include "irods_path.tpp"
 

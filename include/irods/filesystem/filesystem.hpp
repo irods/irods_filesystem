@@ -18,10 +18,6 @@ namespace irods::filesystem
     class recursive_collection_iterator;
     class object_status;
 
-    auto swap(path& _lhs, path& _rhs) -> void;
-
-    auto hash_value(const path& _p) -> std::size_t;
-
     // Enable C++11 range-based for statements.
 
     auto begin(const collection_iterator& _iter) -> const collection_iterator&;

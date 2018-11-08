@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 #include <irods/filesystem.hpp>
 
@@ -14,6 +15,8 @@ int main(int _argc, char* _argv[])
     std::cout << "object name      => " << p.object_name() << '\n';
     std::cout << "lexically normal => " << p.lexically_normal() << '\n';
     std::cout << "lexically normal => " << fs::path{"foo/./bar/.."}.lexically_normal() << '\n';
+
+    std::string ps = p; // Implicit cast
 
     std::cout << "\nforward iterator over 'path':\n";
     for (const auto& e : p)

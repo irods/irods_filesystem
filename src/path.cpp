@@ -1,5 +1,8 @@
 #include <irods/filesystem/path.hpp>
+
 #include <irods/filesystem/detail.hpp>
+
+#include <iomanip>
 
 namespace irods::filesystem
 {
@@ -284,14 +287,14 @@ namespace irods::filesystem
 
     auto operator<<(std::ostream& _os, const path& _p) -> std::ostream&
     {
-        return _os << _p.string();
+        return _os << std::quoted(_p.string());
     }
 
     auto operator>>(std::istream& _is, path& _p) -> std::istream&
     {
-        path::string_type s;
-        _is >> s;
-        _p = s;
+        path::string_type t;
+        _is >> std::quoted(t);
+        _p = t;
         return _is;
     }
 } // namespace irods::filesystem
