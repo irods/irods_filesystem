@@ -171,10 +171,7 @@ namespace irods::filesystem
             return *this = parent_path();
         }
 
-        auto replace_extension(const path& _new_extension = {}) -> path&
-        {
-            return *this;
-        }
+        auto replace_extension(const path& _new_extension = {}) -> path&;
 
         auto swap(path& _rhs) -> void
         {

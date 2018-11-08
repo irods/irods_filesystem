@@ -3,40 +3,71 @@
 
 namespace irods::filesystem
 {
+    namespace
+    {
+        path join(path::iterator _first, path::iterator _last)
+        {
+            path p;
+
+            for (; _first != _last; ++_first)
+            {
+                p /= *_first;
+            }
+
+            return p;
+        }
+    }
+
     //
     // Path
     //
 
-    auto path::root_collection() const -> path
+    auto path::replace_extension(const path& _new_extension) -> path&
     {
-        if (empty())
+        return *this;
+    }
+
+    auto path::lexically_normal() const -> path
+    {
+        path p;
+
+        for (const auto& e : *this)
         {
-            return {};
+            if (e.object_name_is_dot())
+            {
+                continue;
+            }
+
+            if (e.object_name_is_dot_dot())
+            {
+                p = join(p.begin(), --p.end());
+            }
+            else
+            {
+                p /= e;
+            }
         }
 
-        return is_absolute() ? *begin() : path{};
+        return p;
+    }
+
+    auto path::root_collection() const -> path
+    {
+        return !empty() && is_absolute() ? *begin() : path{};
     }
 
     auto path::relative_path() const -> path
     {
-        return {};
+        return (!empty() || has_root_collection())
+            ? join(++begin(), end())
+            : path{};
     }
 
     auto path::parent_path() const -> path
     {
-        if (empty() || begin() == --end())
-        {
-            return {};
-        }
-
-        path pp;
-
-        for (auto it = begin(); it != --end(); ++it)
-        {
-            pp /= *it;
-        }
-
-        return pp;
+        return (empty() || begin() == --end())
+            ? path{}
+            : join(begin(), --end());
     }
 
     auto path::object_name() const -> path
@@ -136,6 +167,33 @@ namespace irods::filesystem
 
         // If we're not at the end of the path, then we're most likely at a separator.
         // Skip consecutive separators.
+        while (detail::is_separator(fp[pos_]))
+        {
+            ++pos_;
+        }
+
+        if (fp.size() == pos_ && detail::is_separator(fp[fp.size() - 1]))
+        {
+            // Found a trailing separator.
+            e = path::dot;
+            pos_ = fp.size() - 1;
+        }
+        else
+        {
+            // Found a character that is not a separator.
+            if (const auto end = fp.find_first_of(separator, pos_);
+                path::string_type::npos != end)
+            {
+                // Found a separator.
+                e = fp.substr(pos_, end - pos_);
+            }
+            else
+            {
+                // No trailing separator found.
+                e = fp.substr(pos_, fp.size() - pos_);
+            }
+        }
+        /*
         if (const auto start = fp.find_first_not_of(separator, pos_);
             path::string_type::npos != start)
         {
@@ -160,6 +218,7 @@ namespace irods::filesystem
             e = path::dot;
             pos_ = fp.size() - 1;
         }
+        */
 
         return *this;
     }
@@ -177,27 +236,31 @@ namespace irods::filesystem
             detail::is_separator(fp[pos_ - 1]))
         {
             --pos_;
-            e = path::dot;
+            e = dot;
             return *this;
         }
 
         if (detail::is_separator(fp[pos_ - 1]))
         {
             // We've reached the root separator of the path.
-            if (pos_ - 1 == 0)
+            if (0 == pos_ - 1)
             {
                 --pos_;
                 e = separator;
                 return *this;
             }
 
-            // Point at the separator.
+            // Point at the separator just after the preceding element.
             // Separators represent the end of a path element.
-            --pos_;
+            while (pos_ > 0 && detail::is_separator(fp[pos_ - 1]))
+            {
+                --pos_;
+            }
         }
 
         const auto end = pos_;
 
+        // Find the start of the path element.
         while (pos_ > 0 && !detail::is_separator(fp[pos_ - 1]))
         {
             --pos_;

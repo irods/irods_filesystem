@@ -1,5 +1,5 @@
-#ifndef IRODS_FILESYSTEM_HPP
-#define IRODS_FILESYSTEM_HPP
+#ifndef IRODS_FILESYSTEM_FILESYSTEM_HPP
+#define IRODS_FILESYSTEM_FILESYSTEM_HPP
 
 #include <string>
 #include <istream>
@@ -7,9 +7,11 @@
 #include <ctime> // TODO Prefer chrono instead!
 #include <cstdint>
 
+#include <irods/filesystem/path.hpp>
+
 namespace irods::filesystem
 {
-    class path;
+    //class path;
     class filesystem_error;
     class collection_entry;
     class collection_iterator;
@@ -19,9 +21,9 @@ namespace irods::filesystem
     auto lexicographical_compare(path::iterator _first1,
                                  path::iterator _last1,
                                  path::iterator _first2,
-                                 path::iterator _last2) -> bool
+                                 path::iterator _last2) -> bool;
 
-    auto swap(path&, _lhs, path& _rhs) -> void;
+    auto swap(path& _lhs, path& _rhs) -> void;
 
     auto hash_value(const path& _p) -> std::size_t;
 
@@ -34,8 +36,8 @@ namespace irods::filesystem
 
     auto operator/(const path& _lhs, const path& _rhs) -> bool;
 
-    auto operator<<(std::ostream& _os, const path& _p) -> std::ostream&;
-    auto operator>>(std::ostream& _is, const path& _p) -> std::istream&;
+    //auto operator<<(std::ostream& _os, const path& _p) -> std::ostream&;
+    //auto operator>>(std::ostream& _is, const path& _p) -> std::istream&;
 
     // Enable C++11 range-based for statements.
 
@@ -96,9 +98,9 @@ namespace irods::filesystem
 
     // Operational functions
 
-    auto absolute(const path& _p, const path& base = current_path()) -> path;
+    //auto absolute(const path& _p, const path& base = current_path()) -> path;
 
-    auto canonical(const path& _p, const path& base = current_path()) -> path;
+    //auto canonical(const path& _p, const path& base = current_path()) -> path;
 
     auto copy(const path& _from, const path& _to) -> path;
 
@@ -109,8 +111,8 @@ namespace irods::filesystem
     auto create_collections(const path& _p) -> bool;
     auto create_collection(const path& _p) -> bool;
 
-    auto current_path() -> path;
-    auto current_path(const path& _p) -> void;
+    //auto current_path() -> path;
+    //auto current_path(const path& _p) -> void;
 
     auto exists(object_status _s) noexcept -> bool;
     auto exists(const path& _p) -> bool;
@@ -135,7 +137,7 @@ namespace irods::filesystem
     auto last_write_time(const path& _p) -> std::time_t;
     auto last_write_time(const path& _p, const std::time_t _new_time) -> void;
 
-    auto relative(const path& _p, const path& _base = current_path()) -> path;
+    //auto relative(const path& _p, const path& _base = current_path()) -> path;
 
     auto remove(const path& _p) -> bool;
     auto remove_all(const path& _p) -> std::uintmax_t;
@@ -153,4 +155,4 @@ namespace irods::filesystem
     auto system_complete(const path& _p) -> path;
 } // namespace irods::filesystem
 
-#endif // IRODS_FILESYSTEM_HPP
+#endif // IRODS_FILESYSTEM_FILESYSTEM_HPP
