@@ -65,6 +65,11 @@ namespace irods::filesystem
         return p;
     }
 
+    auto path::compare(const path& _p) const noexcept -> int
+    {
+        return lexicographical_compare(begin(), end(), _p.begin(), _p.end());
+    }
+
     auto path::root_collection() const -> path
     {
         return !empty() && is_absolute() ? *begin() : path{};
@@ -91,11 +96,35 @@ namespace irods::filesystem
 
     auto path::stem() const -> path
     {
+        if (empty() || object_name_is_dot() || object_name_is_dot_dot())
+        {
+            return {};
+        }
+
+        const auto n = object_name();
+
+        if (auto pos = n.value_.find_last_of(dot); string_type::npos != pos)
+        {
+            return n.value_.substr(0, pos);
+        }
+
         return {};
     }
 
     auto path::extension() const -> path
     {
+        if (empty() || object_name_is_dot() || object_name_is_dot_dot())
+        {
+            return {};
+        }
+
+        const auto n = object_name();
+
+        if (auto pos = n.value_.find_last_of(dot); string_type::npos != pos)
+        {
+            return n.value_.substr(pos);
+        }
+
         return {};
     }
 
@@ -283,6 +312,18 @@ namespace irods::filesystem
         e = fp.substr(pos_, end - pos_);
 
         return *this;
+    }
+
+    auto lexicographical_compare(path::iterator _first1, path::iterator _last1,
+                                 path::iterator _first2, path::iterator _last2) -> bool
+    {
+        for (; (_first1 != _last1) && (_first2 != _last2); ++_first1, ++_first2)
+        {
+            if (_first1->string() < _first2->string()) return true;
+            if (_first2->string() < _first1->string()) return false;
+        }
+
+        return (_first1 == _last1) && (_first2 != _last2);
     }
 
     auto operator<<(std::ostream& _os, const path& _p) -> std::ostream&

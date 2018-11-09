@@ -15,6 +15,8 @@ int main(int _argc, char* _argv[])
     std::cout << "object name      => " << p.object_name() << '\n';
     std::cout << "lexically normal => " << p.lexically_normal() << '\n';
     std::cout << "lexically normal => " << fs::path{"foo/./bar/.."}.lexically_normal() << '\n';
+    std::cout << "stem             => " << fs::path{"/foo/bar.txt"}.stem() << '\n';
+    std::cout << "extension        => " << fs::path{"/foo/bar.txt"}.extension() << '\n';
 
     std::string ps = p; // Implicit cast
 

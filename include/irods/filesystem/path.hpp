@@ -185,7 +185,7 @@ namespace irods::filesystem
 
         // Compare
 
-        auto compare(const path& _p) const noexcept -> int  { return _p.value_.compare(value_); }
+        auto compare(const path& _p) const noexcept -> int;
         //auto compare(const string_type& _p) const -> int        { return compare(path{_p}); }
         //auto compare(const value_type* _p) const -> int         { return compare(path{_p}); }
 
@@ -193,7 +193,7 @@ namespace irods::filesystem
 
         //auto root_name() const -> path              { return {}; }
         auto root_collection() const -> path;
-        auto root_path() const -> path              { return /*root_name() /=*/ root_collection(); }
+        //auto root_path() const -> path              { return /*root_name() /=*/ root_collection(); }
         auto relative_path() const -> path;
         auto parent_path() const -> path;
         auto object_name() const -> path;
@@ -207,13 +207,13 @@ namespace irods::filesystem
         auto object_name_is_dot_dot() const -> bool      { return dot_dot == object_name().value_; }
         //auto has_root_name() const -> bool               { return !root_name().empty(); }
         auto has_root_collection() const -> bool         { return !root_collection().empty(); }
-        auto has_root_path() const -> bool               { return !root_path().empty(); }
+        //auto has_root_path() const -> bool               { return !root_path().empty(); }
         auto has_relative_path() const -> bool           { return !relative_path().empty(); }
         auto has_parent_path() const -> bool             { return !parent_path().empty(); }
         auto has_object_name() const -> bool             { return !object_name().empty(); }
         auto has_stem() const -> bool                    { return !stem().empty(); }
         auto has_extension() const -> bool               { return !extension().empty(); }
-        auto is_absolute() const -> bool                 { return separator == value_.front(); }
+        auto is_absolute() const -> bool                 { return !empty() && separator == value_.front(); }
         auto is_relative() const -> bool                 { return !is_absolute(); }
 
         // Iterators
@@ -337,17 +337,15 @@ namespace irods::filesystem
         path element_;
     }; // reverse_iterator
 
-    auto lexicographical_compare(path::iterator _first1,
-                                 path::iterator _last1,
-                                 path::iterator _first2,
-                                 path::iterator _last2) -> bool;
+    auto lexicographical_compare(path::iterator _first1, path::iterator _last1,
+                                 path::iterator _first2, path::iterator _last2) -> bool;
 
     inline auto operator==(const path& _lhs, const path& _rhs) -> bool { return _lhs.compare(_rhs) == 0; }
-    inline auto operator!=(const path& _lhs, const path& _rhs) -> bool { return !(_lhs == _rhs); }
-    auto operator< (const path& _lhs, const path& _rhs) -> bool;
-    auto operator<=(const path& _lhs, const path& _rhs) -> bool;
-    auto operator> (const path& _lhs, const path& _rhs) -> bool;
-    auto operator>=(const path& _lhs, const path& _rhs) -> bool;
+    inline auto operator!=(const path& _lhs, const path& _rhs) -> bool { return _lhs.compare(_rhs) != 0; }
+    inline auto operator< (const path& _lhs, const path& _rhs) -> bool { return _lhs.compare(_rhs) <  0; }
+    inline auto operator<=(const path& _lhs, const path& _rhs) -> bool { return _lhs.compare(_rhs) <= 0; }
+    inline auto operator> (const path& _lhs, const path& _rhs) -> bool { return _lhs.compare(_rhs) >  0; }
+    inline auto operator>=(const path& _lhs, const path& _rhs) -> bool { return _lhs.compare(_rhs) >= 0; }
 
     inline auto operator/(const path& _lhs, const path& _rhs) -> path { return path{_lhs} /= _rhs; }
 
