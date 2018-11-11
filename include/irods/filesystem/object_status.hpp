@@ -2,34 +2,53 @@
 #define IRODS_FILESYSTEM_OBJECT_STATUS_HPP
 
 #include <irods/filesystem/filesystem.hpp>
+#include <irods/filesystem/permissions.hpp>
 
-namespace irods {
-namespace filesystem {
-
-class object_status
+namespace irods::filesystem
 {
-public:
-    object_status() noexcept;
-    explicit object_status(object_type _ot, perms _prms = perms_not_known) noexcept;
+    enum class object_type
+    {
+        none,
+        not_found,
+        data_object,
+        collection,
+        special_collection,
+        unknown
+        //status_error,
+        //object_not_found,
+        //special_object,
+        //type_unknown
+    };
 
-    // Compiler generated
-    object_status(const object_status& _other) noexcept;
-    auto operator=(const object_status& _other) noexcept -> object_status&;
+    class object_status
+    {
+    public:
+        object_status() noexcept = default;
 
-    ~object_status() noexcept;
+        explicit object_status(object_type _ot, perms _prms = perms::unknown) noexcept
+            : type_{_ot}
+            , perms_{_prms}
+        {
+        }
 
-    // Observers
-    auto type() const noexcept -> object_type;
-    auto permissions() const noexcept -> perms;
+        // Compiler generated
+        object_status(const object_status& _other) noexcept = default;
+        auto operator=(const object_status& _other) noexcept -> object_status& = default;
 
-    // Modifiers
-    void type(object_type _ot) noexcept;
-    void permissions(perms _prms) noexcept;
+        ~object_status() noexcept = default;
 
-private:
-};
+        // Observers
+        auto type() const noexcept -> object_type   { return type_; }
+        auto permissions() const noexcept -> perms  { return perms_; }
 
-} // namespace filesystem
-} // namespace irods
+        // Modifiers
+        auto type(object_type _ot) noexcept -> void     { type_ = _ot; }
+        auto permissions(perms _prms) noexcept -> void  { perms_ = _prms; }
+
+    private:
+        object_type type_;
+        perms perms_;
+    };
+} // namespace irods::filesystem
 
 #endif // IRODS_FILESYSTEM_OBJECT_STATUS_HPP
