@@ -150,8 +150,10 @@ namespace irods::filesystem
 
     auto data_object_size(comm* _comm, const path& _p) -> std::uintmax_t
     {
-        if (auto info = stat(_comm, _p); info.error >= 0) {
-            return static_cast<std::uintmax_t>(info.size);
+        if (is_data_object(_comm, _p)) {
+            if (auto info = stat(_comm, _p); info.error >= 0) {
+                return static_cast<std::uintmax_t>(info.size);
+            }
         }
 
         return 0;
