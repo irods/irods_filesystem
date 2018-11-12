@@ -25,7 +25,8 @@ namespace irods::filesystem
     public:
         object_status() noexcept = default;
 
-        explicit object_status(object_type _ot, perms _prms = perms::unknown) noexcept
+        //explicit object_status(object_type _ot, perms _prms = perms::unknown) noexcept
+        explicit object_status(object_type _ot, perms _prms = perms::null) noexcept
             : type_{_ot}
             , perms_{_prms}
         {

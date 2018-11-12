@@ -45,13 +45,6 @@ namespace irods::filesystem
     };
     */
 
-    enum class perm_options
-    {
-        replace,
-        add,
-        remove
-    };
-
     enum class copy_options
     {
         none,
@@ -63,10 +56,16 @@ namespace irods::filesystem
         //fail_if_exists = none
     };
 
-    enum class collection_options
+    enum class collection_options : std::uint8_t
     {
         none,
         skip_permission_denied
+    };
+
+    enum class remove_options : std::uint8_t
+    {
+        none, // Moves objects to trash.
+        no_trash
     };
 
     // Operational functions
@@ -111,10 +110,10 @@ namespace irods::filesystem
     auto last_write_time(comm* _comm, const path& _p) -> std::time_t;
     auto last_write_time(comm* _comm, const path& _p, const std::time_t _new_time) -> void;
 
-    auto remove(comm* _comm, const path& _p) -> bool;
-    auto remove_all(comm* _comm, const path& _p) -> std::uintmax_t;
+    auto remove(comm* _comm, const path& _p, remove_options _opts = remove_options::none) -> bool;
+    auto remove_all(comm* _comm, const path& _p, remove_options _opts = remove_options::none) -> std::uintmax_t;
 
-    auto permissions(comm* _comm, const path& _p, perms _prms, perm_options opts = perm_options::replace) -> void;
+    //auto permissions(comm* _comm, const path& _p, perms _prms, perm_options opts = perm_options::replace) -> void;
 
     auto rename(comm* _comm, const path& _from, const path& _to) -> void;
     auto move(comm* _comm, const path& _from, const path& _to) -> void;

@@ -3,6 +3,7 @@
 #include <irods/filesystem/path.hpp>
 #include <irods/filesystem/filesystem_error.hpp>
 
+#include <irods/rodsClient.h>
 #include <irods/objStat.h>
 #include <irods/openCollection.h>
 #include <irods/closeCollection.h>
@@ -21,6 +22,13 @@
 
 namespace
 {
+    void throw_if_path_length_exceeds_limit(const irods::filesystem::path& _p)
+    {
+        if (_p.string().size() > MAX_NAME_LEN) {
+            throw irods::filesystem::filesystem_error{"path length exceeds max path size"};
+        }
+    }
+
     struct stat_info
     {
         int error;
@@ -56,6 +64,73 @@ namespace
         }
 
         return si;
+    }
+
+    auto is_collection_empty(comm* _comm, const irods::filesystem::path& _p) -> bool
+    {
+        std::string sql = "select count(COLL_NAME) where COLL_PARENT_NAME = '";
+        sql += _p;
+        sql += "'";
+
+        for (const auto& row : irods::query{_comm, sql}) {
+            if (row.empty()) {
+                throw irods::filesystem::filesystem_error{"empty resultset returned"};
+            }
+
+            if (std::stoi(row[0]) > 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    struct remove_impl_options
+    {
+        bool no_trash    = false;
+        bool recursive   = false;
+    };
+
+    auto remove_impl(comm* _comm, const irods::filesystem::path& _p, remove_impl_options _opts) -> bool
+    {
+        throw_if_path_length_exceeds_limit(_p);
+
+        if (exists(_comm, _p)) {
+            if (const auto s = status(_comm, _p); is_data_object(s)) {
+                dataObjInp_t input{};
+                std::strncpy(input.objPath, _p.c_str(), _p.string().size());
+
+                if (_opts.no_trash) {
+                    addKeyVal(&input.condInput, FORCE_FLAG_KW, "");
+                }
+
+                return rcDataObjUnlink(_comm, &input) == 0;
+            }
+            else if (is_collection(s)) {
+                if (!_opts.recursive && !is_collection_empty(_comm, _p)) {
+                    throw irods::filesystem::filesystem_error{"cannot remove non-empty collection"};
+                }
+
+                collInp_t input{};
+                std::strncpy(input.collName, _p.c_str(), _p.string().size());
+
+                if (_opts.no_trash) {
+                    addKeyVal(&input.condInput, FORCE_FLAG_KW, "");
+                }
+
+                if (_opts.recursive) {
+                    addKeyVal(&input.condInput, RECURSIVE_OPR__KW, "");
+                }
+
+                constexpr int verbose = 0;
+                return rcRmColl(_comm, &input, verbose) >= 0;
+            }
+            else if (is_other(s)) {
+                throw irods::filesystem::filesystem_error{"unknown object type"};
+            }
+        }
+
+        return false;
     }
 } // anonymous namespace
 
@@ -175,21 +250,7 @@ namespace irods::filesystem
             return data_object_size(_comm, _p) == 0;
         }
         else if (is_collection(s)) {
-            std::string sql = "select count(COLL_NAME) where COLL_PARENT_NAME = '";
-            sql += _p;
-            sql += "'";
-
-            for (const auto& row : irods::query{_comm, sql}) {
-                if (row.empty()) {
-                    throw filesystem_error{"empty resultset returned"};
-                }
-
-                if (std::stoi(row[0]) > 0) {
-                    return false;
-                }
-            }
-
-            return true;
+            return is_collection_empty(_comm, _p);
         }
 
         throw filesystem_error{"unknown object type"};
@@ -225,13 +286,49 @@ namespace irods::filesystem
 
     }
 
-    auto remove(comm* _comm, const path& _p) -> bool
+    auto remove(comm* _comm, const path& _p, remove_options _opts) -> bool
     {
-        return false;
+        const auto no_trash = (remove_options::no_trash == _opts);
+        constexpr auto recursive = false;
+
+        return remove_impl(_comm, _p, {no_trash, recursive});
     }
 
-    auto remove_all(comm* _comm, const path& _p) -> std::uintmax_t
+    auto remove_all(comm* _comm, const path& _p, remove_options _opts) -> std::uintmax_t
     {
+        const auto normal_p = _p.lexically_normal();
+
+        std::string data_obj_sql = "select count(DATA_ID) where COLL_NAME like '";
+        data_obj_sql += normal_p;
+        data_obj_sql += "%'";
+
+        std::string colls_sql = "select count(COLL_ID) where COLL_NAME like '";
+        colls_sql += normal_p;
+        colls_sql += "%'";
+
+        std::uintmax_t count = 0;
+
+        for (const auto& sql : {data_obj_sql, colls_sql}) {
+            for (const auto& row : irods::query{_comm, sql}) {
+                if (row.empty()) {
+                    continue;
+                }
+
+                count += std::stoull(row[0]);
+            }
+        }
+
+        if (0 == count) {
+            return 0;
+        }
+
+        const auto no_trash = (remove_options::no_trash == _opts);
+        constexpr auto recursive = true;
+
+        if (remove_impl(_comm, _p, {no_trash, recursive})) {
+            return count;
+        }
+
         return 0;
     }
 
@@ -247,7 +344,7 @@ namespace irods::filesystem
 
     auto move(comm* _comm, const path& _from, const path& _to) -> void
     {
-
+        rename(_comm, _from, _to);
     }
 
     auto resize_data_object(comm* _comm, const path& _p, std::uintmax_t _size) -> void
