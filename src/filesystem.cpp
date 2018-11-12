@@ -337,14 +337,25 @@ namespace irods::filesystem
 
     }
 
-    auto rename(comm* _comm, const path& _from, const path& _to) -> void
+    auto rename(comm* _comm, const path& _old_p, const path& _new_p) -> void
     {
+        throw_if_path_length_exceeds_limit(_old_p);
+        throw_if_path_length_exceeds_limit(_new_p);
 
+        if (!exists(_comm, _old_p)) {
+            throw filesystem_error{"source path does not exist"};
+        }
+
+        dataObjCopyInp_t input{};
+        std::strncpy(input.srcDataObjInp.objPath, _old_p.c_str(), _old_p.string().size());
+        std::strncpy(input.destDataObjInp.objPath, _new_p.c_str(), _new_p.string().size());
+
+        rcDataObjRename(_comm, &input);
     }
 
-    auto move(comm* _comm, const path& _from, const path& _to) -> void
+    auto move(comm* _comm, const path& _old_p, const path& _new_p) -> void
     {
-        rename(_comm, _from, _to);
+        rename(_comm, _old_p, _new_p);
     }
 
     auto resize_data_object(comm* _comm, const path& _p, std::uintmax_t _size) -> void
