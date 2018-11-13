@@ -5,7 +5,7 @@
 
 namespace irods::filesystem::detail
 {
-    auto is_separator(path::value_type _c) noexcept -> bool
+    inline auto is_separator(path::value_type _c) noexcept -> bool
     {
         return path::separator == _c;
     }

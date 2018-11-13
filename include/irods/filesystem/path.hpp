@@ -44,7 +44,7 @@ namespace irods::filesystem
 
         // Delegating constructor
         template <typename Source,
-                  typename = std::enable_if_t<path_traits::is_pathable_v<Source>>>
+                  typename = std::enable_if_t<path_traits::is_pathable<Source>>>
         path(const Source& _source)
             : path{std::begin(_source), std::end(_source)}
         {
@@ -72,7 +72,7 @@ namespace irods::filesystem
         }
 
         template <typename Source,
-                  typename = std::enable_if_t<path_traits::is_pathable_v<Source>>>
+                  typename = std::enable_if_t<path_traits::is_pathable<Source>>>
         auto operator=(const Source& _source) -> path&
         {
             string_type new_path{std::begin(_source), std::end(_source)};
@@ -86,7 +86,7 @@ namespace irods::filesystem
         }
 
         template <typename Source,
-                  typename = std::enable_if_t<path_traits::is_pathable_v<Source>>>
+                  typename = std::enable_if_t<path_traits::is_pathable<Source>>>
         auto assign(const Source& _source) -> path&
         {
             return *this = _source;
@@ -105,14 +105,14 @@ namespace irods::filesystem
         auto operator/=(const path& _p) -> path&;
 
         template <typename Source,
-                  typename = std::enable_if_t<path_traits::is_pathable_v<Source>>>
+                  typename = std::enable_if_t<path_traits::is_pathable<Source>>>
         auto operator/=(const Source& _source) -> path&
         {
             return *this /= path{_source};
         }
 
         template <typename Source,
-                  typename = std::enable_if_t<path_traits::is_pathable_v<Source>>>
+                  typename = std::enable_if_t<path_traits::is_pathable<Source>>>
         auto append(const Source& _source) -> path&
         {
             return *this /= path{_source};
@@ -135,7 +135,7 @@ namespace irods::filesystem
         auto operator+=(value_type _p) -> path&         { value_ += _p; return *this; }
 
         template <typename Source,
-                  typename = std::enable_if_t<path_traits::is_pathable_v<Source>>>
+                  typename = std::enable_if_t<path_traits::is_pathable<Source>>>
         auto operator+=(const Source& _p) -> path&
         {
             return *this += path{_p};

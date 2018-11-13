@@ -2,6 +2,7 @@
 
 #include <irods/filesystem/path.hpp>
 #include <irods/filesystem/filesystem_error.hpp>
+#include <irods/filesystem/detail.hpp>
 
 #include <irods/rodsClient.h>
 #include <irods/objStat.h>
@@ -18,6 +19,8 @@
 #include <irods/irods_query.hpp>
 
 #include <iostream>
+#include <string>
+#include <iterator>
 #include <exception>
 
 namespace
@@ -218,9 +221,9 @@ namespace irods::filesystem
         return exists(status(_comm, _p));
     }
 
-    auto equivalent(comm* _comm, const path& _p1, const path& _p2) -> bool
+    auto equivalent(const path& _p1, const path& _p2) -> bool
     {
-        return false;
+        return _p1.lexically_normal() == _p2.lexically_normal();
     }
 
     auto data_object_size(comm* _comm, const path& _p) -> std::uintmax_t
@@ -342,15 +345,86 @@ namespace irods::filesystem
         throw_if_path_length_exceeds_limit(_old_p);
         throw_if_path_length_exceeds_limit(_new_p);
 
+        if (auto s = status(_comm, _old_p); is_data_object(s)) {
+            // Case 1: "_new_p" is the same data object as "_old_p".
+            if (equivalent(_old_p, _new_p)) {
+                return;
+            }
+
+            // Case 2: "_new_p" is an existing non-collection object.
+            if (exists(_comm, _new_p)) {
+                if (is_data_object(_comm, _new_p)) {
+
+                }
+
+                throw filesystem_error{R"_("_new_p" must be a data object)_"};
+            }
+            // Case 3: "_new_p" is a non-existing data object in an existing collection.
+            else {
+
+            }
+        }
+        else if (is_collection(s)) {
+            // Case 1: "_new_p" is the same collection as "_old_p".
+            if (equivalent(_old_p, _new_p)) {
+                return;
+            }
+
+            // Case 2: "_new_p" is an existing collection.
+            if (exists(_comm, _new_p)) {
+                if (is_collection(_comm, _new_p)) {
+
+                }
+
+                throw filesystem_error{R"_("_new_p" must be a collection)_"};
+            }
+            // Case 3: "_new_p" is a non-existing collection w/ the following requirements:
+            //  1. Does not end with a collection separator.
+            //  2. The parent collection must exist.
+            else if (!detail::is_separator(_new_p.string().back()) && exists(_comm, _new_p.parent_path())) {
+
+            }
+        }
+
+        /*
+        if (_old_p.empty()) {
+            throw filesystem_error{"source path cannot be empty"};
+        }
+
+        if (_new_p.empty()) {
+            throw filesystem_error{"destination path cannot be empty"};
+        }
+
+        throw_if_path_length_exceeds_limit(_old_p);
+        throw_if_path_length_exceeds_limit(_new_p);
+
+        if (_new_p.object_name_is_dot() || _new_p.object_name_is_dot_dot()) {
+            throw filesystem_error{R"_(destination path cannot be "." or "..")_"};
+        }
+
+        if (is_collection(_comm, _old_p) &&
+            lexicographical_compare(std::begin(_old_p), std::end(_old_p),
+                                    std::begin(_new_p), std::end(_new_p)))
+        {
+            throw filesystem_error{"_old_p cannot be an ancestor of _new_p"};
+        }
+
         if (!exists(_comm, _old_p)) {
             throw filesystem_error{"source path does not exist"};
         }
 
+        if (equivalent(_old_p, _new_p)) {
+            return;
+        }
+        */
+
+        /*
         dataObjCopyInp_t input{};
         std::strncpy(input.srcDataObjInp.objPath, _old_p.c_str(), _old_p.string().size());
         std::strncpy(input.destDataObjInp.objPath, _new_p.c_str(), _new_p.string().size());
 
         rcDataObjRename(_comm, &input);
+        */
     }
 
     auto move(comm* _comm, const path& _old_p, const path& _new_p) -> void

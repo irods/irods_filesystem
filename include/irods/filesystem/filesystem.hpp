@@ -92,7 +92,7 @@ namespace irods::filesystem
     auto exists(object_status _s) noexcept -> bool;
     auto exists(comm* _comm, const path& _p) -> bool;
 
-    auto equivalent(comm* _comm, const path& _p1, const path& _p2) -> bool;
+    auto equivalent(const path& _p1, const path& _p2) -> bool;
 
     auto data_object_size(comm* _comm, const path& _p) -> std::uintmax_t;
 

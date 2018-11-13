@@ -4,6 +4,8 @@
 #include <irods/filesystem.hpp>
 #include <irods/rodsClient.h>
 
+#include <cassert>
+
 namespace fs = irods::filesystem;
 
 int main(int _argc, char* _argv[])
@@ -65,11 +67,13 @@ int main(int _argc, char* _argv[])
         try
         {
             fs::path home = "/tempZone/home/kory";
+
+            std::cout << std::boolalpha;
+
+            /*
             auto dobj = home / "main.cpp";
             auto new_col = home / "col1.d";
             auto new_cols = home / "col2.d/col3.d/col4.d";
-
-            std::cout << std::boolalpha;
 
             std::cout << "is_collection(" << home << ") => " << fs::is_collection(conn, home) << '\n';
             std::cout << "is_collection(" << dobj << ") => " << fs::is_collection(conn, dobj) << '\n';
@@ -108,6 +112,53 @@ int main(int _argc, char* _argv[])
             std::cout << "rename(" << new_name << ", " << dobj << ")\n"; fs::move(conn, new_name, dobj);
             std::cout << "exists(" << dobj << ") => " << fs::exists(conn, dobj) << '\n';
             std::cout << "exists(" << new_name << ") => " << fs::exists(conn, new_name) << '\n';
+
+            auto new_col_name = home / "col1.renamed.d";
+            std::cout << "rename(" << new_col << ", " << new_col_name << ")\n"; fs::rename(conn, new_col, new_col_name);
+            std::cout << "exists(" << new_col << ") => " << fs::exists(conn, new_col) << '\n';
+            std::cout << "exists(" << new_col_name << ") => " << fs::exists(conn, new_col_name) << '\n';
+            */
+
+            /*
+            std::cout << '\n';
+            auto src = home / "src";
+            auto dst = home / "dst";
+            auto dst1 = src / "dst";
+            std::cout << "create_collection(" << src << ") => " << fs::create_collection(conn, src) << '\n';
+            std::cout << "exists(" << src << ") => " << fs::exists(conn, src) << '\n';
+            std::cout << "rename(" << src << ", " << dst << ")\n"; fs::rename(conn, src, dst);
+            std::cout << "exists(" << src << ") => " << fs::exists(conn, src) << '\n';
+            std::cout << "exists(" << dst << ") => " << fs::exists(conn, dst) << '\n';
+            */
+
+            /*
+            fs::path p = home / "sandbox";
+            auto from = p / "from";
+            auto to = p / "to";
+
+            fs::create_collections(conn, from);
+            fs::create_collection(conn, to);
+
+            fs::rename(conn, from, p / "to/");                  // error: "to" is a collection.
+            fs::rename(conn, from / "f1.txt", to / "f2.txt");   // OK
+            fs::rename(conn, from, to);                         // error: "to" is not empty.
+            fs::rename(conn, from, to / "subcol");              // OK
+
+            fs::remove_all(conn, p, fs::remove_options::no_trash);
+            */
+
+            std::cout << fs::path{"foo/./bar/.."}.lexically_normal() << '\n';
+            std::cout << fs::path{"foo/.///bar/../"}.lexically_normal() << '\n';
+            std::cout << fs::path{"/../foo/.///bar/.."}.lexically_normal() << '\n';
+            std::cout << fs::path{"/../foo/.///bar/../"}.lexically_normal() << '\n';
+
+            for (const auto& e : fs::path{"/../foo/.///bar/../"})
+                std::cout << "\te => " << e << '\n';
+
+            assert(fs::path{"foo/./bar/.."}.lexically_normal() == "foo/");
+            assert(fs::path{"foo/.///bar/../"}.lexically_normal() == "foo/");
+            assert(fs::path{"/../foo/.///bar/.."}.lexically_normal() == "/foo");
+            assert(fs::path{"/../foo/.///bar/../"}.lexically_normal() == "/foo/");
         }
         catch (const std::exception& e)
         {
