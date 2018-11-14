@@ -342,22 +342,31 @@ namespace irods::filesystem
 
     auto rename(comm* _comm, const path& _old_p, const path& _new_p) -> void
     {
+        if (_old_p.empty()) {
+            throw filesystem_error{"source path cannot be empty"};
+        }
+
+        if (_new_p.empty()) {
+            throw filesystem_error{"destination path cannot be empty"};
+        }
+
         throw_if_path_length_exceeds_limit(_old_p);
         throw_if_path_length_exceeds_limit(_new_p);
 
-        if (auto s = status(_comm, _old_p); is_data_object(s)) {
-            // Case 1: "_new_p" is the same data object as "_old_p".
-            if (equivalent(_old_p, _new_p)) {
-                return;
-            }
+        // Case 1: "_new_p" is the same object as "_old_p".
+        if (equivalent(_old_p, _new_p)) {
+            return;
+        }
 
+        /*
+        if (auto s = status(_comm, _old_p); is_data_object(s)) {
             // Case 2: "_new_p" is an existing non-collection object.
             if (exists(_comm, _new_p)) {
-                if (is_data_object(_comm, _new_p)) {
-
+                if (!is_data_object(_comm, _new_p)) {
+                    throw filesystem_error{R"_("_new_p" must be a data object)_"};
                 }
 
-                throw filesystem_error{R"_("_new_p" must be a data object)_"};
+
             }
             // Case 3: "_new_p" is a non-existing data object in an existing collection.
             else {
@@ -365,18 +374,13 @@ namespace irods::filesystem
             }
         }
         else if (is_collection(s)) {
-            // Case 1: "_new_p" is the same collection as "_old_p".
-            if (equivalent(_old_p, _new_p)) {
-                return;
-            }
-
             // Case 2: "_new_p" is an existing collection.
             if (exists(_comm, _new_p)) {
-                if (is_collection(_comm, _new_p)) {
-
+                if (!is_collection(_comm, _new_p)) {
+                    throw filesystem_error{R"_("_new_p" must be a collection)_"};
                 }
 
-                throw filesystem_error{R"_("_new_p" must be a collection)_"};
+
             }
             // Case 3: "_new_p" is a non-existing collection w/ the following requirements:
             //  1. Does not end with a collection separator.
@@ -385,6 +389,7 @@ namespace irods::filesystem
 
             }
         }
+        */
 
         /*
         if (_old_p.empty()) {
@@ -418,13 +423,13 @@ namespace irods::filesystem
         }
         */
 
-        /*
         dataObjCopyInp_t input{};
         std::strncpy(input.srcDataObjInp.objPath, _old_p.c_str(), _old_p.string().size());
         std::strncpy(input.destDataObjInp.objPath, _new_p.c_str(), _new_p.string().size());
 
-        rcDataObjRename(_comm, &input);
-        */
+        if (const auto ec = rcDataObjRename(_comm, &input); ec < 0) {
+            throw filesystem_error{"rename error [ec = " + std::to_string(ec) + "]"};
+        }
     }
 
     auto move(comm* _comm, const path& _old_p, const path& _new_p) -> void

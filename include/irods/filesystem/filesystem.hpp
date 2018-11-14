@@ -118,7 +118,7 @@ namespace irods::filesystem
     auto rename(comm* _comm, const path& _from, const path& _to) -> void;
     auto move(comm* _comm, const path& _from, const path& _to) -> void;
 
-    auto resize_data_object(comm* _comm, const path& _p, std::uintmax_t _size) -> void;
+    //auto resize_data_object(comm* _comm, const path& _p, std::uintmax_t _size) -> void;
 
     //auto space(comm* _comm, const path& _p) -> space_info;
 

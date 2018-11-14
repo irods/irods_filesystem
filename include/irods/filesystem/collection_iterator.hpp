@@ -1,10 +1,11 @@
 #ifndef IRODS_FILESYSTEM_COLLECTION_ITERATOR_HPP
 #define IRODS_FILESYSTEM_COLLECTION_ITERATOR_HPP
 
-#include <iterator>
-
 #include <irods/filesystem/path.hpp>
 #include <irods/filesystem/collection_entry.hpp>
+#include <irods/irods_query.hpp>
+
+#include <iterator>
 
 namespace irods::filesystem
 {
@@ -34,9 +35,15 @@ namespace irods::filesystem
         bool operator!=(const collection_iterator& _rhs) const;
 
         auto operator*() const -> reference;
+        auto operator->() const -> pointer;
 
     private:
+        irods::query query_;
     };
+
+    // Enables support for range-based for-loops.
+    auto begin(collection_iterator _iter) -> collection_iterator;
+    auto end(const collection_iterator& _iter) -> collection_iterator;
 } // namespace irods::filesystem
 
 #endif // IRODS_FILESYSTEM_COLLECTION_ITERATOR_HPP

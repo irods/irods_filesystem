@@ -67,6 +67,12 @@ int main(int _argc, char* _argv[])
         try
         {
             fs::path home = "/tempZone/home/kory";
+            auto src = home / "col1.d";
+            auto dst = home / "col1.renamed.d";
+
+            //fs::rename(conn, src, dst);
+            //fs::rename(conn, home / "main.cpp", dst / "main.renamed.cpp");
+            fs::rename(conn, home / "main.cpp", dst);
 
             std::cout << std::boolalpha;
 
@@ -152,7 +158,6 @@ int main(int _argc, char* _argv[])
             std::cout << fs::path{"foo/.///bar/../"}.lexically_normal() << '\n';
             std::cout << fs::path{"/../foo/.///bar/.."}.lexically_normal() << '\n';
             std::cout << fs::path{"/../foo/.///bar/../"}.lexically_normal() << '\n';
-            */
 
             fs::path p = "/../foo/.///bar/../";
             std::cout << "p => " << p << '\n';
@@ -161,7 +166,6 @@ int main(int _argc, char* _argv[])
             for (const auto& e : p)
                 std::cout << "\te => " << e << '\n';
 
-            /*
             auto fit = std::begin(p);
             std::cout << "*fit => " << *fit << '\n';
             std::cout << "*fit => " << *++fit << '\n';
@@ -170,13 +174,10 @@ int main(int _argc, char* _argv[])
             std::cout << "*fit => " << *++fit << '\n';
             std::cout << "*fit => " << *--fit << '\n';
             std::cout << "*fit => " << *--fit << '\n';
-            */
 
-            /*
             std::cout << '\n';
             for (auto it = std::rbegin(p); it != std::rend(p); ++it)
                 std::cout << "\te => " << *it << '\n';
-            */
 
             auto eit = --std::end(p);
             std::cout << "\n*eit => " << *eit << '\n';
@@ -196,7 +197,6 @@ int main(int _argc, char* _argv[])
             std::cout << "*--rit => " << *--rit << '\n';
             std::cout << "*--rit => " << *--rit << '\n';
 
-            /*
             assert(fs::path{"foo/./bar/.."}.lexically_normal() == "foo/");
             assert(fs::path{"foo/.///bar/../"}.lexically_normal() == "foo/");
             assert(fs::path{"/../foo/.///bar/.."}.lexically_normal() == "/foo");
