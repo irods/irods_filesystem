@@ -147,17 +147,21 @@ int main(int _argc, char* _argv[])
             fs::remove_all(conn, p, fs::remove_options::no_trash);
             */
 
+            /*
             std::cout << fs::path{"foo/./bar/.."}.lexically_normal() << '\n';
             std::cout << fs::path{"foo/.///bar/../"}.lexically_normal() << '\n';
             std::cout << fs::path{"/../foo/.///bar/.."}.lexically_normal() << '\n';
             std::cout << fs::path{"/../foo/.///bar/../"}.lexically_normal() << '\n';
+            */
 
             fs::path p = "/../foo/.///bar/../";
+            std::cout << "p => " << p << '\n';
 
             std::cout << '\n';
             for (const auto& e : p)
                 std::cout << "\te => " << e << '\n';
 
+            /*
             auto fit = std::begin(p);
             std::cout << "*fit => " << *fit << '\n';
             std::cout << "*fit => " << *++fit << '\n';
@@ -166,28 +170,31 @@ int main(int _argc, char* _argv[])
             std::cout << "*fit => " << *++fit << '\n';
             std::cout << "*fit => " << *--fit << '\n';
             std::cout << "*fit => " << *--fit << '\n';
+            */
 
+            /*
             std::cout << '\n';
             for (auto it = std::rbegin(p); it != std::rend(p); ++it)
                 std::cout << "\te => " << *it << '\n';
+            */
 
-            auto eit = std::end(p);
-            std::cout << "*eit => " << *--eit << '\n';
-            std::cout << "*eit => " << *--eit << '\n';
-            std::cout << "*eit => " << *--eit << '\n';
-            std::cout << "*eit => " << *++eit << '\n';
-            std::cout << "*eit => " << *++eit << '\n';
-            std::cout << "*eit => " << *--eit << '\n';
-            std::cout << "*eit => " << *++eit << '\n';
+            auto eit = --std::end(p);
+            std::cout << "\n*eit => " << *eit << '\n';
+            std::cout << "*--eit => " << *--eit << '\n';
+            std::cout << "*--eit => " << *--eit << '\n';
+            std::cout << "*++eit => " << *++eit << '\n';
+            std::cout << "*--eit => " << *--eit << '\n';
+            std::cout << "*++eit => " << *++eit << '\n';
+            std::cout << "*++eit => " << *++eit << '\n';
 
             auto rit = std::rbegin(p);
-            std::cout << "*rit => " << *rit << '\n';
-            std::cout << "*rit => " << *++rit << '\n';
-            std::cout << "*rit => " << *++rit << '\n';
-            std::cout << "*rit => " << *--rit << '\n';
-            std::cout << "*rit => " << *++rit << '\n';
-            std::cout << "*rit => " << *--rit << '\n';
-            std::cout << "*rit => " << *--rit << '\n';
+            std::cout << "\n*rit => " << *rit << '\n';
+            std::cout << "*++rit => " << *++rit << '\n';
+            std::cout << "*++rit => " << *++rit << '\n';
+            std::cout << "*--rit => " << *--rit << '\n';
+            std::cout << "*++rit => " << *++rit << '\n';
+            std::cout << "*--rit => " << *--rit << '\n';
+            std::cout << "*--rit => " << *--rit << '\n';
 
             /*
             assert(fs::path{"foo/./bar/.."}.lexically_normal() == "foo/");

@@ -318,7 +318,7 @@ namespace irods::filesystem
         auto operator--() -> reverse_iterator&
         {
             auto t = ++it_;
-            element_ = *++t;
+            element_ = *--t;
             return *this;
         }
 

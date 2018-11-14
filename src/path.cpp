@@ -339,13 +339,13 @@ namespace irods::filesystem
         const auto& fp = path_ptr_->value_; // Full path
         auto& e = element_.value_;          // Path element
 
-        /*
-        if (fp.size() - 1 == pos_ && e.empty())
-        {
+        // If we're just before the "end" iterator and the currrent value of
+        // the element is empty, then we know the path ended with a separator and
+        // therefore, the iterator should now be set to the "end" iterator.
+        if (fp.size() - 1 == pos_ && e.empty()) {
             ++pos_;
             return *this;
         }
-        */
 
         // Skip the element currently pointed to.
         pos_ += e.size();
@@ -367,8 +367,7 @@ namespace irods::filesystem
         if (fp.size() == pos_ && detail::is_separator(fp[fp.size() - 1]))
         {
             // Found a trailing separator.
-            e = path::dot;
-            //e.clear();
+            e.clear();
             pos_ = fp.size() - 1;
         }
         // Found a character that is not a separator.
@@ -400,8 +399,7 @@ namespace irods::filesystem
             detail::is_separator(fp[pos_ - 1]))
         {
             --pos_;
-            e = dot;
-            //e.clear();
+            e.clear();
             return *this;
         }
 
@@ -439,10 +437,14 @@ namespace irods::filesystem
     auto lexicographical_compare(path::iterator _first1, path::iterator _last1,
                                  path::iterator _first2, path::iterator _last2) -> bool
     {
-        for (; (_first1 != _last1) && (_first2 != _last2); ++_first1, ++_first2)
-        {
-            if (_first1->string() < _first2->string()) return true;
-            if (_first2->string() < _first1->string()) return false;
+        for (; (_first1 != _last1) && (_first2 != _last2); ++_first1, ++_first2) {
+            if (_first1->string() < _first2->string()) {
+                return true;
+            }
+
+            if (_first2->string() < _first1->string()) {
+                return false;
+            }
         }
 
         return (_first1 == _last1) && (_first2 != _last2);
