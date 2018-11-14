@@ -150,6 +150,15 @@ namespace irods::filesystem
         return *this;
     }
 
+    auto path::remove_object_name() -> path&
+    {
+        if (const auto pos = value_.find_last_of(separator); string_type::npos != pos) {
+            value_.erase(pos + 1);
+        }
+
+        return *this;
+    }
+
     auto path::replace_extension(const path& _new_extension) -> path&
     {
         return *this;
@@ -161,6 +170,7 @@ namespace irods::filesystem
             return *this;
         }
 
+        /*
         auto normalized_value = value_;
 
         replace_consecutive_separators(normalized_value);
@@ -168,29 +178,30 @@ namespace irods::filesystem
         remove_name_followed_by_dot_dot_separator(normalized_value);
         remove_root_dot_dot_separators(normalized_value);
 
-        return {normalized_value};
+        if (normalized_value.empty()) {
+            normalized_value = ".";
+        }
 
-        /*
+        return {normalized_value};
+        */
+
+        path p;
+
         for (const auto& e : *this)
         {
-            if (e.object_name_is_dot())
-            {
-                p += '/';
+            if (e.object_name_is_dot()) {
                 continue;
             }
 
-            if (e.object_name_is_dot_dot())
-            {
-                p = join(p.begin(), --p.end());
+            if (e.object_name_is_dot_dot()) {
+                p.remove_object_name();
+                continue;
             }
-            else
-            {
-                p /= e;
-            }
+
+            p /= e;
         }
 
         return p;
-        */
     }
 
     auto path::compare(const path& _p) const noexcept -> int
@@ -205,9 +216,11 @@ namespace irods::filesystem
 
     auto path::relative_path() const -> path
     {
-        return (!empty() || has_root_collection())
-            ? join(++begin(), end())
-            : path{};
+        if (has_root_collection()) {
+            return join(++begin(), end());
+        }
+
+        return empty() ? path{} : *this;
     }
 
     auto path::parent_path() const -> path
@@ -219,7 +232,7 @@ namespace irods::filesystem
 
     auto path::object_name() const -> path
     {
-        return empty() ? path{} : *--end();
+        return relative_path().empty() ? path{} : *--end();
     }
 
     auto path::stem() const -> path
@@ -326,6 +339,14 @@ namespace irods::filesystem
         const auto& fp = path_ptr_->value_; // Full path
         auto& e = element_.value_;          // Path element
 
+        /*
+        if (fp.size() - 1 == pos_ && e.empty())
+        {
+            ++pos_;
+            return *this;
+        }
+        */
+
         // Skip the element currently pointed to.
         pos_ += e.size();
 
@@ -347,49 +368,21 @@ namespace irods::filesystem
         {
             // Found a trailing separator.
             e = path::dot;
+            //e.clear();
             pos_ = fp.size() - 1;
+        }
+        // Found a character that is not a separator.
+        else if (const auto end = fp.find_first_of(separator, pos_);
+                 path::string_type::npos != end)
+        {
+            // Found a separator.
+            e = fp.substr(pos_, end - pos_);
         }
         else
         {
-            // Found a character that is not a separator.
-            if (const auto end = fp.find_first_of(separator, pos_);
-                path::string_type::npos != end)
-            {
-                // Found a separator.
-                e = fp.substr(pos_, end - pos_);
-            }
-            else
-            {
-                // No trailing separator found.
-                e = fp.substr(pos_, fp.size() - pos_);
-            }
+            // No trailing separator found.
+            e = fp.substr(pos_, fp.size() - pos_);
         }
-        /*
-        if (const auto start = fp.find_first_not_of(separator, pos_);
-            path::string_type::npos != start)
-        {
-            // Found a character that is not a separator.
-            pos_ = start;
-
-            if (const auto end = fp.find_first_of(separator, pos_);
-                path::string_type::npos != end)
-            {
-                // Found a separator.
-                e = fp.substr(start, end - start);
-            }
-            else
-            {
-                // No trailing separator found.
-                e = fp.substr(start, fp.size() - start);
-            }
-        }
-        else if (detail::is_separator(fp[fp.size() - 1]))
-        {
-            // Found a trailing separator.
-            e = path::dot;
-            pos_ = fp.size() - 1;
-        }
-        */
 
         return *this;
     }
@@ -401,13 +394,14 @@ namespace irods::filesystem
 
         // Handle trailing separator at the end of the path.
         // If the iterator represents the end iterator and the character preceding it
-        // is a separator, then set the current element must be set to the dot path.
+        // is a separator, then set the current element to the dot path.
         if (fp.size() == pos_ &&
             fp.size() > 1 &&
             detail::is_separator(fp[pos_ - 1]))
         {
             --pos_;
             e = dot;
+            //e.clear();
             return *this;
         }
 

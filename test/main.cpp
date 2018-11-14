@@ -152,13 +152,49 @@ int main(int _argc, char* _argv[])
             std::cout << fs::path{"/../foo/.///bar/.."}.lexically_normal() << '\n';
             std::cout << fs::path{"/../foo/.///bar/../"}.lexically_normal() << '\n';
 
-            for (const auto& e : fs::path{"/../foo/.///bar/../"})
+            fs::path p = "/../foo/.///bar/../";
+
+            std::cout << '\n';
+            for (const auto& e : p)
                 std::cout << "\te => " << e << '\n';
 
+            auto fit = std::begin(p);
+            std::cout << "*fit => " << *fit << '\n';
+            std::cout << "*fit => " << *++fit << '\n';
+            std::cout << "*fit => " << *++fit << '\n';
+            std::cout << "*fit => " << *--fit << '\n';
+            std::cout << "*fit => " << *++fit << '\n';
+            std::cout << "*fit => " << *--fit << '\n';
+            std::cout << "*fit => " << *--fit << '\n';
+
+            std::cout << '\n';
+            for (auto it = std::rbegin(p); it != std::rend(p); ++it)
+                std::cout << "\te => " << *it << '\n';
+
+            auto eit = std::end(p);
+            std::cout << "*eit => " << *--eit << '\n';
+            std::cout << "*eit => " << *--eit << '\n';
+            std::cout << "*eit => " << *--eit << '\n';
+            std::cout << "*eit => " << *++eit << '\n';
+            std::cout << "*eit => " << *++eit << '\n';
+            std::cout << "*eit => " << *--eit << '\n';
+            std::cout << "*eit => " << *++eit << '\n';
+
+            auto rit = std::rbegin(p);
+            std::cout << "*rit => " << *rit << '\n';
+            std::cout << "*rit => " << *++rit << '\n';
+            std::cout << "*rit => " << *++rit << '\n';
+            std::cout << "*rit => " << *--rit << '\n';
+            std::cout << "*rit => " << *++rit << '\n';
+            std::cout << "*rit => " << *--rit << '\n';
+            std::cout << "*rit => " << *--rit << '\n';
+
+            /*
             assert(fs::path{"foo/./bar/.."}.lexically_normal() == "foo/");
             assert(fs::path{"foo/.///bar/../"}.lexically_normal() == "foo/");
             assert(fs::path{"/../foo/.///bar/.."}.lexically_normal() == "/foo");
             assert(fs::path{"/../foo/.///bar/../"}.lexically_normal() == "/foo/");
+            */
         }
         catch (const std::exception& e)
         {

@@ -159,10 +159,7 @@ namespace irods::filesystem
             value_.clear();
         }
 
-        auto remove_object_name() -> path&
-        {
-            return *this = parent_path();
-        }
+        auto remove_object_name() -> path&;
 
         auto replace_extension(const path& _new_extension = {}) -> path&;
 
