@@ -352,9 +352,6 @@ namespace irods::filesystem
     auto swap(path& _lhs, path& _rhs) -> void;
 
     auto hash_value(const path& _p) -> std::size_t;
-
-//#include "irods_path.tpp"
-
 } // namespace irods::filesystem
 
 #endif // IRODS_FILESYSTEM_PATH_HPP

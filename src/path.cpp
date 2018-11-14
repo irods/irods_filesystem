@@ -12,126 +12,15 @@ namespace irods::filesystem
 {
     namespace
     {
-        path join(path::iterator _first, path::iterator _last)
+        auto join(path::iterator _first, path::iterator _last) -> path
         {
             path p;
 
-            for (; _first != _last; ++_first)
-            {
+            for (; _first != _last; ++_first) {
                 p /= *_first;
             }
 
             return p;
-        }
-
-        void replace_consecutive_separators(std::string& _p)
-        {
-            auto pos = _p.find_first_of('/');
-            
-            while (pos != std::string::npos)
-            {
-                if (auto end = _p.find_first_not_of('/', pos); end != std::string::npos)
-                {
-                    _p.replace(pos, end - pos, "/");
-                    pos = _p.find_first_of('/', pos + 1);
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
-
-        void remove_dot_separators(std::string& _p)
-        {
-            auto pos = _p.find_first_of('.');
-            
-            while (pos != std::string::npos)
-            {
-                if (pos + 1 < _p.size())
-                {
-                    switch (_p[pos + 1])
-                    {
-                        case '/':
-                            _p.erase(pos, 2);
-                            pos = _p.find_first_of('.', pos);
-                            break;
-                            
-                        case '.':
-                            pos = _p.find_first_of('.', pos + 2);
-                            break;
-                            
-                        default:
-                            pos = _p.find_first_of('.', pos + 1);
-                            break;
-                    }
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
-
-        void remove_name_followed_by_dot_dot_separator(std::string& _p)
-        {
-            auto pos = _p.find_first_not_of("/");
-            
-            while (pos != std::string::npos)
-            {
-                auto end = _p.find_first_of('/', pos);
-                
-                if (end == std::string::npos)
-                    break;
-                    
-                if (end + 2 < _p.size() &&
-                    _p[end + 1] == '.' &&
-                    _p[end + 2] == '.')
-                {
-                    if (end + 3 < _p.size() && _p[end + 3] == '/')
-                    {
-                        end += 4;
-                    }
-                    else
-                    {
-                        end += 3;
-                    }
-                    
-                    _p.erase(pos, end - pos);
-                    pos = _p.find_first_not_of("/", pos);
-                }
-                else
-                {
-                    pos = _p.find_first_not_of("/", end);
-                }
-            }
-        }
-
-        void remove_root_dot_dot_separators(std::string& _p)
-        {
-            if (auto pos = _p.find_first_of('/'); pos != 0)
-                return;
-                
-            using size_type = std::string::size_type;
-            
-            for (size_type i = 1; i < _p.size(); )
-            {
-                if (_p[i] == '.' &&
-                    i + 2 < _p.size() &&
-                    _p[i + 1] == '.' &&
-                    _p[i + 2] == '/')
-                {
-                    auto end = i + 3;
-                    while (end < _p.size() && _p[end] == '/')
-                        ++end;
-                    _p.erase(i, end - i);
-                    i = end;
-                }
-                else
-                {
-                    ++i;
-                }
-            }
         }
     } // anonymous namespace
 
@@ -141,8 +30,7 @@ namespace irods::filesystem
 
     auto path::operator/=(const path& _p) -> path&
     {
-        if (!_p.empty())
-        {
+        if (!_p.empty()) {
             append_seperator_if_needed(_p);
             value_ += _p.value_;
         }
@@ -169,21 +57,6 @@ namespace irods::filesystem
         if (empty()) {
             return *this;
         }
-
-        /*
-        auto normalized_value = value_;
-
-        replace_consecutive_separators(normalized_value);
-        remove_dot_separators(normalized_value);
-        remove_name_followed_by_dot_dot_separator(normalized_value);
-        remove_root_dot_dot_separators(normalized_value);
-
-        if (normalized_value.empty()) {
-            normalized_value = ".";
-        }
-
-        return {normalized_value};
-        */
 
         path p;
 
