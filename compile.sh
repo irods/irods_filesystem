@@ -1,6 +1,6 @@
 #! /bin/bash
 
-source_files='test/main.cpp src/path.cpp src/filesystem.cpp'
+source_files='test/main.cpp src/path.cpp src/filesystem.cpp src/collection_iterator.cpp'
 
 clang++ \
     -std=c++17 \

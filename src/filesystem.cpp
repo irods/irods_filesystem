@@ -384,38 +384,6 @@ namespace irods::filesystem
         }
         */
 
-        /*
-        if (_old_p.empty()) {
-            throw filesystem_error{"source path cannot be empty"};
-        }
-
-        if (_new_p.empty()) {
-            throw filesystem_error{"destination path cannot be empty"};
-        }
-
-        detail::throw_if_path_length_exceeds_limit(_old_p);
-        detail::throw_if_path_length_exceeds_limit(_new_p);
-
-        if (_new_p.object_name_is_dot() || _new_p.object_name_is_dot_dot()) {
-            throw filesystem_error{R"_(destination path cannot be "." or "..")_"};
-        }
-
-        if (is_collection(_comm, _old_p) &&
-            lexicographical_compare(std::begin(_old_p), std::end(_old_p),
-                                    std::begin(_new_p), std::end(_new_p)))
-        {
-            throw filesystem_error{"_old_p cannot be an ancestor of _new_p"};
-        }
-
-        if (!exists(_comm, _old_p)) {
-            throw filesystem_error{"source path does not exist"};
-        }
-
-        if (equivalent(_old_p, _new_p)) {
-            return;
-        }
-        */
-
         dataObjCopyInp_t input{};
         std::strncpy(input.srcDataObjInp.objPath, _old_p.c_str(), _old_p.string().size());
         std::strncpy(input.destDataObjInp.objPath, _new_p.c_str(), _new_p.string().size());

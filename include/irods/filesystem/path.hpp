@@ -37,6 +37,11 @@ namespace irods::filesystem
         {
         }
 
+        path(value_type* _source)
+            : value_{_source}
+        {
+        }
+
         path(string_type&& _source) noexcept
             : value_{std::move(_source)}
         {
@@ -64,6 +69,18 @@ namespace irods::filesystem
 
         auto operator=(const path& _p) -> path& = default;
         auto operator=(path&& _p) noexcept -> path& = default;
+
+        auto operator=(const value_type* _p) -> path&
+        {
+            value_ = _p;
+            return *this;
+        }
+
+        auto operator=(value_type* _p) -> path&
+        {
+            value_ = _p;
+            return *this;
+        }
 
         auto operator=(string_type&& _source) -> path&
         {

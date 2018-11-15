@@ -77,6 +77,10 @@ int main(int _argc, char* _argv[])
             for (const auto& e : fs::collection_iterator(conn, home))
                 std::cout << e << '\n';
 
+            std::cout << '\n';
+            for (fs::collection_iterator it{conn, home}; it != fs::collection_iterator{}; ++it)
+                std::cout << it->path() << '\n';
+
             std::cout << std::boolalpha;
 
             /*
