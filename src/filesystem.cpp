@@ -25,13 +25,6 @@
 
 namespace
 {
-    void throw_if_path_length_exceeds_limit(const irods::filesystem::path& _p)
-    {
-        if (_p.string().size() > MAX_NAME_LEN) {
-            throw irods::filesystem::filesystem_error{"path length exceeds max path size"};
-        }
-    }
-
     struct stat_info
     {
         int error;
@@ -96,7 +89,7 @@ namespace
 
     auto remove_impl(comm* _comm, const irods::filesystem::path& _p, remove_impl_options _opts) -> bool
     {
-        throw_if_path_length_exceeds_limit(_p);
+        irods::filesystem::detail::throw_if_path_length_exceeds_limit(_p);
 
         if (exists(_comm, _p)) {
             if (const auto s = status(_comm, _p); is_data_object(s)) {
@@ -350,8 +343,8 @@ namespace irods::filesystem
             throw filesystem_error{"destination path cannot be empty"};
         }
 
-        throw_if_path_length_exceeds_limit(_old_p);
-        throw_if_path_length_exceeds_limit(_new_p);
+        detail::throw_if_path_length_exceeds_limit(_old_p);
+        detail::throw_if_path_length_exceeds_limit(_new_p);
 
         // Case 1: "_new_p" is the same object as "_old_p".
         if (equivalent(_old_p, _new_p)) {
@@ -400,8 +393,8 @@ namespace irods::filesystem
             throw filesystem_error{"destination path cannot be empty"};
         }
 
-        throw_if_path_length_exceeds_limit(_old_p);
-        throw_if_path_length_exceeds_limit(_new_p);
+        detail::throw_if_path_length_exceeds_limit(_old_p);
+        detail::throw_if_path_length_exceeds_limit(_new_p);
 
         if (_new_p.object_name_is_dot() || _new_p.object_name_is_dot_dot()) {
             throw filesystem_error{R"_(destination path cannot be "." or "..")_"};

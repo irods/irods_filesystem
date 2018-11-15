@@ -30,10 +30,10 @@ namespace irods::filesystem
         // Observers
         operator const path&() const noexcept                   { return path_; }
         auto path() const noexcept -> const path&               { return path_; }
-        auto exists() const noexcept -> bool                    { return exists(status_); }
-        auto is_data_object() const noexcept -> bool            { return is_data_object(status_); }
-        auto is_collection() const noexcept -> bool             { return is_collection(status_): }
-        auto is_other() const noexcept -> bool                  { return is_other(status_): }
+        auto exists() const noexcept -> bool                    { return filesystem::exists(status_); }
+        auto is_data_object() const noexcept -> bool            { return filesystem::is_data_object(status_); }
+        auto is_collection() const noexcept -> bool             { return filesystem::is_collection(status_); }
+        auto is_other() const noexcept -> bool                  { return filesystem::is_other(status_); }
         auto data_object_size() -> std::uintmax_t;
         auto last_write_time() const noexcept -> std::time_t    { return mtime_; }
         auto status() const noexcept -> object_status           { return status_; }
@@ -47,7 +47,7 @@ namespace irods::filesystem
         auto operator>=(const collection_entry& _rhs) -> bool   { return path_ >= _rhs.path_; }
 
     private:
-        path path_;
+        class path path_;
         mutable object_status status_;
         mutable std::time_t mtime_;
     };

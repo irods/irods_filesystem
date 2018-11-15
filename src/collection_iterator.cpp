@@ -6,22 +6,15 @@
 #include <irods/openCollection.h>
 #include <irods/readCollection.h>
 #include <irods/closeCollection.h>
-#include <irods/at_scope_exit.hpp>
 
 #include <functional>
+#include <iostream>
 
 namespace irods::filesystem
 {
-    namespace
-    {
-        constexpr char query[] = "";
-    } // anonymous namespace
-
-    collection_iterator::collection_iterator() = default;
-
-    collection_iterator::collection_iterator(comm& _comm,
+    collection_iterator::collection_iterator(comm* _comm,
                                              const path& _p,
-                                             collection_options _opts = collection_options::none)
+                                             collection_options _opts)
         : comm_{_comm}
         , path_{_p}
         , handle_{}
@@ -31,10 +24,11 @@ namespace irods::filesystem
 
         collInp_t input{};
         std::strncpy(input.collName, _p.c_str(), _p.string().size());
+        input.flags = RECUR_QUERY_FG | VERY_LONG_METADATA_FG;
 
-        handle_ = rcOpenCollection(comm_, &input);
+        handle_ = std::make_shared<int>(rcOpenCollection(comm_, &input));
 
-        if (handle_ < 0) {
+        if (*handle_ < 0) {
             throw filesystem_error{"could not open collection for reading"};
         }
 
@@ -44,43 +38,57 @@ namespace irods::filesystem
 
     collection_iterator::~collection_iterator()
     {
-        if (handle_ >= 0) {
-            rcCloseCollection(comm_, handle_);
+        if (handle_.use_count() == 1 && *handle_ >= 0) {
+            rcCloseCollection(comm_, *handle_);
         }
     }
 
     auto collection_iterator::operator++() -> collection_iterator&
     {
-        collEnt_t* entry{};
+        collEnt_t* e{};
 
-        if (const auto ec = rcReadCollection(comm_, handle_, &entry); ec < 0) {
-            throw filesystem_error{"could not read collection entry"};
+        if (const auto ec = rcReadCollection(comm_, *handle_, &e); ec < 0) {
+            throw filesystem_error{"could not read collection entry [ec => " + std::to_string(ec) + ']'};
         }
 
-        irods::at_scope_exit<std::function<void()> at_scope_exit{[entry] {
+        /*
+        irods::at_scope_exit<std::function<void()> at_scope_exit{[e] {
             if (entry) {
-                freeCollEnt(entry);
+                freeCollEnt(e);
             }
         }};
+        */
 
-        std::cout << "path: " << path_ << '\n';
-        std::cout << "\tobject type: " << entry->objType << '\n';
-        std::cout << "\treplNum: " << entry->relpNum << '\n';
-        std::cout << "\treplStatus: " << entry->replStatus << '\n';
-        std::cout << "\tdataMode: " << entry->dataMode << '\n';
-        std::cout << "\tdataSize: " << entry->dataSize << '\n';
-        std::cout << "\tcollName: " << entry->collName << '\n';
-        std::cout << "\tdataName: " << entry->dataName << '\n';
-        std::cout << "\tdataId: " << entry->dataId << '\n';
-        std::cout << "\tcreateTime: " << entry->createTime << '\n';
-        std::cout << "\tmodifyTime: " << entry->modifyTime << '\n';
-        std::cout << "\tchksum: " << entry->chksum << '\n';
-        std::cout << "\tresource: " << entry->resource << '\n';
-        std::cout << "\tresc_hier: " << entry->resc_hier << '\n';
-        std::cout << "\tphyPath: " << entry->phyPath << '\n';
-        std::cout << "\townerName: " << entry->ownerName << '\n';
-        std::cout << "\tdataType: " << entry->dataType << '\n';
+        switch (e->objType) {
+            case COLL_OBJ_T:
+                break;
+
+            case DATA_OBJ_T:
+                break;
+
+            default:
+                break;
+        }
+
+        std::cout << "\tobject type: " << e->objType << '\n';
+        std::cout << "\treplNum: " << e->replNum << '\n';
+        std::cout << "\treplStatus: " << e->replStatus << '\n';
+        std::cout << "\tdataMode: " << e->dataMode << '\n';
+        std::cout << "\tdataSize: " << e->dataSize << '\n';
+        if (e->collName) std::cout << "\tcollName: " << e->collName << '\n';
+        if (e->dataName) std::cout << "\tdataName: " << e->dataName << '\n';
+        if (e->dataId) std::cout << "\tdataId: " << e->dataId << '\n';
+        if (e->createTime) std::cout << "\tcreateTime: " << e->createTime << '\n';
+        if (e->modifyTime) std::cout << "\tmodifyTime: " << e->modifyTime << '\n';
+        if (e->chksum) std::cout << "\tchksum: " << e->chksum << '\n';
+        if (e->resource) std::cout << "\tresource: " << e->resource << '\n';
+        if (e->resc_hier) std::cout << "\tresc_hier: " << e->resc_hier << '\n';
+        if (e->phyPath) std::cout << "\tphyPath: " << e->phyPath << '\n';
+        if (e->ownerName) std::cout << "\townerName: " << e->ownerName << '\n';
+        if (e->dataType) std::cout << "\tdataType: " << e->dataType << '\n';
         std::cout << '\n';
+
+        freeCollEnt(e);
 
         /*
         entry_.object_type();
@@ -105,7 +113,7 @@ namespace irods::filesystem
         return *this;
     }
 
-    auto collection_iterator::operator++(int) -> collection_iterator
+    auto collection_iterator::operator++(int) -> collection_iterator&
     {
         return ++(*this);
     }

@@ -74,6 +74,9 @@ int main(int _argc, char* _argv[])
             //fs::rename(conn, home / "main.cpp", dst / "main.renamed.cpp");
             fs::rename(conn, home / "main.cpp", dst);
 
+            for (const auto& e : fs::collection_iterator(conn, home))
+                std::cout << e << '\n';
+
             std::cout << std::boolalpha;
 
             /*
@@ -203,7 +206,7 @@ int main(int _argc, char* _argv[])
             assert(fs::path{"/../foo/.///bar/../"}.lexically_normal() == "/foo/");
             */
         }
-        catch (const std::exception& e)
+        catch (const fs::filesystem_error& e)
         {
             std::cout << e.what() << '\n';
         }

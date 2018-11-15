@@ -16,7 +16,8 @@ set(HEADERS ${CMAKE_SOURCE_DIR}/include/irods/filesystem.hpp
             ${CMAKE_SOURCE_DIR}/include/irods/filesystem/permissions.hpp)
 
 set(SOURCE ${CMAKE_SOURCE_DIR}/src/filesystem.cpp
-           ${CMAKE_SOURCE_DIR}/src/path.cpp)
+           ${CMAKE_SOURCE_DIR}/src/path.cpp
+           ${CMAKE_SOURCE_DIR}/src/collection_iterator.cpp)
 
 set(INCLUDE_DIRS /opt/irods-externals/clang6.0-0/include/c++/v1
                  /opt/irods-externals/boost1.67.0-0/include
