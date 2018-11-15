@@ -4,11 +4,8 @@
 #include <irods/filesystem/filesystem.hpp>
 #include <irods/filesystem/collection_entry.hpp>
 #include <irods/filesystem/path.hpp>
-//#include <irods/irods_query.hpp>
 
-#include <iostream>
 #include <iterator>
-#include <memory>
 
 namespace irods::filesystem
 {
@@ -29,14 +26,14 @@ namespace irods::filesystem
         using iterator_category = std::input_iterator_tag;
         // clang-format on
 
-        collection_iterator() = default;
+        collection_iterator();
 
         collection_iterator(comm* _comm,
                             const path& _p,
                             collection_options _opts = collection_options::none);
 
-        collection_iterator(const collection_iterator& _other) = default;
-        auto operator=(const collection_iterator& _other) -> collection_iterator& = default;
+        collection_iterator(const collection_iterator& _other);
+        auto operator=(const collection_iterator& _other) -> collection_iterator&;
 
         ~collection_iterator();
 
@@ -52,7 +49,8 @@ namespace irods::filesystem
     private:
         comm* comm_;
         path path_;
-        std::shared_ptr<int> handle_;
+        int handle_;
+        long offset_;
         value_type entry_;
     };
 
