@@ -30,9 +30,6 @@ namespace irods::filesystem
 
     // Enable C++11 range-based for statements.
 
-    auto begin(const collection_iterator& _iter) -> const collection_iterator&;
-    auto end(const collection_iterator&) -> collection_iterator;
-
     auto begin(const recursive_collection_iterator& _iter) -> const recursive_collection_iterator&;
     auto end(const recursive_collection_iterator&) -> recursive_collection_iterator;
 
@@ -54,12 +51,6 @@ namespace irods::filesystem
         recursive,
         collections_only
         //fail_if_exists = none
-    };
-
-    enum class collection_options : std::uint8_t
-    {
-        none,
-        skip_permission_denied
     };
 
     enum class remove_options : std::uint8_t
