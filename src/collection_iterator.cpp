@@ -10,123 +10,59 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include <cassert>
 
 namespace irods::filesystem
 {
-    namespace
-    {
-        template <typename T, typename U>
-        auto set_if_not_null(T& _dst, U* _src)
-        {
-            if (_src) {
-                _dst = _src;
-            }
-        }
-    } // anonymous namespace
-
-    collection_iterator::collection_iterator()
-        : comm_{}
-        , path_{}
-        , handle_{-1}
-        , offset_{}
-        , entry_{}
-    {
-    }
-    
-    collection_iterator::collection_iterator(comm* _comm,
+    collection_iterator::collection_iterator(conn* _conn,
                                              const path& _p,
                                              collection_options _opts)
-        : comm_{_comm}
-        , path_{_p}
-        , handle_{-1}
-        , offset_{}
-        , entry_{}
+        : ctx_{}
     {
         detail::throw_if_path_length_exceeds_limit(_p);
+    
+        ctx_ = std::make_shared<context>();
+        ctx_->conn = _conn;
+        ctx_->path = _p;
+        assert(ctx_->handle == 0);
+        assert(ctx_->offset == 0);
 
         collInp_t input{};
         std::strncpy(input.collName, _p.c_str(), _p.string().size());
-        //input.flags = RECUR_QUERY_FG | VERY_LONG_METADATA_FG;
 
-        handle_ = rcOpenCollection(comm_, &input);
+        ctx_->handle = rcOpenCollection(_conn, &input);
 
-        if (handle_ < 0) {
-            throw filesystem_error{"could not open collection for reading"};
+        if (ctx_->handle < 0) {
+            throw filesystem_error{"could not open collection for reading [handle => " +
+                                   std::to_string(ctx_->handle) + ']'};
         }
 
-        // Read the first entry.
+        // Point to the first entry.
         ++(*this);
-    }
-
-    collection_iterator::collection_iterator(const collection_iterator& _other)
-        : comm_{_other.comm_}
-        , path_{_other.path_}
-        , handle_{}
-        , offset_{}
-        , entry_{}
-        //, entry_{_other.entry_}
-    {
-        collInp_t input{};
-        std::strncpy(input.collName, path_.c_str(), path_.string().size());
-        //input.flags = RECUR_QUERY_FG | VERY_LONG_METADATA_FG;
-
-        handle_ = rcOpenCollection(comm_, &input);
-
-        if (handle_ < 0) {
-            throw filesystem_error{"could not open collection for reading"};
-        }
-
-        // Move the iterator forward so that it points to the same location
-        // as "_other".
-        for (long i = 0; i < _other.offset_; ++i) {
-            ++(*this);
-        }
-    }
-
-    auto collection_iterator::operator=(const collection_iterator& _other) -> collection_iterator&
-    {
-        comm_ = _other.comm_;
-        path_ = _other.path_;
-        offset_ = 0;
-
-        collInp_t input{};
-        std::strncpy(input.collName, path_.c_str(), path_.string().size());
-        //input.flags = RECUR_QUERY_FG | VERY_LONG_METADATA_FG;
-
-        handle_ = rcOpenCollection(comm_, &input);
-
-        if (handle_ < 0) {
-            throw filesystem_error{"could not open collection for reading"};
-        }
-
-        // Move the iterator forward so that it points to the same location
-        // as "_other".
-        for (long i = 0; i < _other.offset_; ++i) {
-            ++(*this);
-        }
-
-        return *this;
     }
 
     collection_iterator::~collection_iterator()
     {
-        rcCloseCollection(comm_, handle_);
+        if (ctx_.use_count() == 1) {
+            rcCloseCollection(ctx_->conn, ctx_->handle);
+        }
     }
 
     auto collection_iterator::operator++() -> collection_iterator&
     {
         collEnt_t* e{};
 
-        if (const auto ec = rcReadCollection(comm_, handle_, &e); ec < 0) {
+        if (const auto ec = rcReadCollection(ctx_->conn, ctx_->handle, &e); ec < 0) {
             if (ec == CAT_NO_ROWS_FOUND) {
-                handle_ = -1;
+                ctx_ = nullptr;
                 return *this;
             }
             
-            throw filesystem_error{"could not read collection entry [ec => " + std::to_string(ec) + ']'};
+            throw filesystem_error{"could not read collection entry [ec => " +
+                                   std::to_string(ec) + ']'};
         }
 
-        ++offset_;
+        ++ctx_->offset;
 
         /*
         irods::at_scope_exit<std::function<void()> at_scope_exit{[e] {
@@ -136,45 +72,42 @@ namespace irods::filesystem
         }};
         */
 
-        entry_.repl_number_ = e->replNum;
-        entry_.repl_status_ = e->replStatus;
-        entry_.data_mode_ = e->dataMode;
-        entry_.data_size_ = e->dataSize;
+        auto& entry = ctx_->entry;
 
-        if (e->dataId)      { entry_.data_id_ = e->dataId; }
-        if (e->createTime)  { entry_.ctime_ = std::stoll(e->createTime); }
-        if (e->modifyTime)  { entry_.mtime_ = std::stoll(e->modifyTime); }
-        if (e->chksum)      { entry_.checksum_ = e->chksum; }
-        if (e->resource)    { entry_.resc_ = e->resource; }
-        if (e->resc_hier)   { entry_.resc_hier_ = e->resc_hier; }
-        if (e->phyPath)     { entry_.phy_path_ = e->phyPath; }
-        if (e->ownerName)   { entry_.owner_ = e->ownerName; }
-        if (e->dataType)    { entry_.data_type_ = e->dataType; }
+        entry.repl_number_ = e->replNum;
+        entry.repl_status_ = e->replStatus;
+        entry.data_mode_ = e->dataMode;
+        entry.data_size_ = e->dataSize;
+
+        if (e->dataId)      { entry.data_id_ = e->dataId; }
+        if (e->createTime)  { entry.ctime_ = std::stoll(e->createTime); }
+        if (e->modifyTime)  { entry.mtime_ = std::stoll(e->modifyTime); }
+        if (e->chksum)      { entry.checksum_ = e->chksum; }
+        if (e->resource)    { entry.resc_ = e->resource; }
+        if (e->resc_hier)   { entry.resc_hier_ = e->resc_hier; }
+        if (e->phyPath)     { entry.phy_path_ = e->phyPath; }
+        if (e->ownerName)   { entry.owner_ = e->ownerName; }
+        if (e->dataType)    { entry.data_type_ = e->dataType; }
 
         switch (e->objType) {
             case COLL_OBJ_T:
-                entry_.status_.type(object_type::collection);
-                entry_.path_ = e->collName;
+                entry.status_.type(object_type::collection);
+                entry.path_ = e->collName;
                 break;
 
             case DATA_OBJ_T:
-                entry_.status_.type(object_type::data_object);
-                entry_.path_ = e->dataName;
+                entry.status_.type(object_type::data_object);
+                entry.path_ = ctx_->path / e->dataName;
                 break;
 
             default:
-                entry_.status_.type(object_type::none);
+                entry.status_.type(object_type::none);
                 break;
         }
 
         freeCollEnt(e);
 
         return *this;
-    }
-
-    auto collection_iterator::operator++(int) -> collection_iterator&
-    {
-        return ++(*this);
     }
 } // namespace irods::filesystem
 

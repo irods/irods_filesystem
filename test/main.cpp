@@ -49,7 +49,9 @@ int main(int _argc, char* _argv[])
         }
 
         rErrMsg_t errors;
-        auto* conn = rcConnect(env.rodsHost, env.rodsPort, env.rodsUserName,
+        /*auto* conn = rcConnect(env.rodsHost, env.rodsPort, env.rodsUserName,
+                               env.rodsZone, 0, &errors);*/
+        auto* conn = rcConnect(env.rodsHost, env.rodsPort, "rods",
                                env.rodsZone, 0, &errors);
         if (!conn)
         {
@@ -66,22 +68,44 @@ int main(int _argc, char* _argv[])
 
         try
         {
-            fs::path home = "/tempZone/home/kory";
-            auto src = home / "col1.d";
-            auto dst = home / "col1.renamed.d";
+            std::cout << std::boolalpha;
+
+            //fs::path home = "/tempZone";
+            //fs::path home = "/tempZone/home/kory";
+            //auto src = home / "col1.d";
+            //auto dst = home / "col1.renamed.d";
 
             //fs::rename(conn, src, dst);
             //fs::rename(conn, home / "main.cpp", dst / "main.renamed.cpp");
-            fs::rename(conn, home / "main.cpp", dst);
+            //fs::rename(conn, home / "main.cpp", dst);
 
-            for (const auto& e : fs::collection_iterator(conn, home))
+            fs::path root = "/";
+            auto zone = root / "tempZone"; 
+            auto trash = root / "tempZone/trash"; 
+            auto col4d = trash / "home/kory/col2.d/col3.d/col4.d";
+
+            std::cout << zone << " is a valid collection  : " << fs::is_collection(conn, zone) << '\n';
+            std::cout << trash << " is a valid collection : " << fs::is_collection(conn, trash) << '\n';
+            std::cout << col4d << " is an empty collection? " << fs::is_empty(conn, col4d) << '\n';
+
+            /*
+            std::cout << "\nusing ranged-for collection_iterator:\n";
+            for (const auto& e : fs::collection_iterator{conn, zone})
+                std::cout << e << '\n';
+            */
+
+            std::cout << "\nusing ranged-for recursive_collection_iterator:\n";
+            fs::recursive_collection_iterator rit{conn, "/tempZone/home"};
+            //rit.disable_recursion_pending();
+            //for (const auto& e : fs::recursive_collection_iterator{conn, root})
+            for (const auto& e : rit)
                 std::cout << e << '\n';
 
-            std::cout << '\n';
+            /*
+            std::cout << "traditional for-loop using iterators:\n";
             for (fs::collection_iterator it{conn, home}; it != fs::collection_iterator{}; ++it)
                 std::cout << it->path() << '\n';
-
-            std::cout << std::boolalpha;
+            */
 
             /*
             auto dobj = home / "main.cpp";

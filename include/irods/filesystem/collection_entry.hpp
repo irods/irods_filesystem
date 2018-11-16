@@ -5,29 +5,19 @@
 #include <irods/filesystem/path.hpp>
 #include <irods/filesystem/object_status.hpp>
 
+#include <chrono>
 #include <ctime>
 
 namespace irods::filesystem
 {
+    class collection_iterator;
+    class recursive_collection_iterator;
+
     class collection_entry
     {
     public:
-        // Constructors and destructor
-        //collection_entry() = default;
-        //explicit collection_entry(const path& _p, object_status _os = {});
-
-        // Copy-constructor and assignment
-        //collection_entry(const collection_entry& _other) = default;
-        //auto operator=(const collection_entry& _other) -> collection_entry& = default;
-
-        //~collection_entry() = default;
-
-        // Modifiers
-        //auto assign(const path& _p, object_status _os = {}) -> void;
-        //auto replace_object_name(const path& _p, object_status _os = {}) -> void;
-        //auto refresh() -> void;
-
         // Observers
+
         operator const path&() const noexcept                           { return path_; }
         auto path() const noexcept -> const path&                       { return path_; }
         auto exists() const noexcept -> bool                            { return filesystem::exists(status_); }
@@ -51,6 +41,7 @@ namespace irods::filesystem
         auto data_type() const noexcept -> const std::string&           { return data_type_; }
 
         // Comparisons
+
         auto operator==(const collection_entry& _rhs) -> bool   { return path_ == _rhs.path_; }
         auto operator!=(const collection_entry& _rhs) -> bool   { return path_ != _rhs.path_; }
         auto operator< (const collection_entry& _rhs) -> bool   { return path_ <  _rhs.path_; }
@@ -60,6 +51,7 @@ namespace irods::filesystem
 
     private:
         friend class collection_iterator;
+        friend class recursive_collection_iterator;
 
         mutable class path path_;
         mutable object_status status_;

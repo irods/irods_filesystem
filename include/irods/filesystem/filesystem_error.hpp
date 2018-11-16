@@ -1,6 +1,8 @@
 #ifndef IRODS_FILESYSTEM_ERROR_HPP
 #define IRODS_FILESYSTEM_ERROR_HPP
 
+#include <irods/filesystem/path.hpp>
+
 #include <system_error>
 #include <stdexcept>
 #include <string>
