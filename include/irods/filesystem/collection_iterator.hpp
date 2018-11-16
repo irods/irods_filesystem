@@ -1,11 +1,13 @@
 #ifndef IRODS_FILESYSTEM_COLLECTION_ITERATOR_HPP
 #define IRODS_FILESYSTEM_COLLECTION_ITERATOR_HPP
 
+#include <irods/filesystem/config.hpp>
 #include <irods/filesystem/filesystem.hpp>
 #include <irods/filesystem/collection_entry.hpp>
 #include <irods/filesystem/path.hpp>
 
 #include <iterator>
+#include <memory>
 
 namespace irods::filesystem
 {
@@ -26,35 +28,53 @@ namespace irods::filesystem
         using iterator_category = std::input_iterator_tag;
         // clang-format on
 
-        collection_iterator();
+        // Constructors and destructor
 
-        collection_iterator(comm* _comm,
+        collection_iterator() = default;
+
+        collection_iterator(conn* _conn,
                             const path& _p,
                             collection_options _opts = collection_options::none);
 
-        collection_iterator(const collection_iterator& _other);
-        auto operator=(const collection_iterator& _other) -> collection_iterator&;
+        collection_iterator(const collection_iterator& _other) = default;
+        auto operator=(const collection_iterator& _other) -> collection_iterator& = default;
+
+        collection_iterator(collection_iterator&& _other) = default;
+        auto operator=(collection_iterator&& _other) -> collection_iterator& = default;
 
         ~collection_iterator();
 
+        // Observers
+
+        auto connection() -> conn*  { return ctx_->conn; }
+
+        auto operator*() const -> reference { return ctx_->entry; }
+        auto operator->() const -> pointer  { return &ctx_->entry; }
+
+        // Modifiers
+
         auto operator++() -> collection_iterator&;
-        auto operator++(int) -> collection_iterator&;
 
-        auto operator*() const -> reference { return entry_; }
-        auto operator->() const -> pointer  { return &entry_; }
+        // Compare
 
-        auto operator==(const collection_iterator& _rhs) -> bool { return handle_ == _rhs.handle_; }
-        auto operator!=(const collection_iterator& _rhs) -> bool { return !(*this == _rhs); }
+        auto operator==(const collection_iterator& _rhs) const -> bool { return _rhs.ctx_ == ctx_; }
+        auto operator!=(const collection_iterator& _rhs) const -> bool { return !(*this == _rhs); }
 
     private:
-        comm* comm_;
-        path path_;
-        int handle_;
-        long offset_;
-        value_type entry_;
+        struct context
+        {
+            conn* conn{};
+            path path{};
+            int handle{};
+            long offset{};
+            value_type entry{};
+        };
+
+        std::shared_ptr<context> ctx_;
     };
 
     // Enables support for range-based for-loops.
+
     inline auto begin(collection_iterator _iter) noexcept -> collection_iterator
     {
         return _iter;

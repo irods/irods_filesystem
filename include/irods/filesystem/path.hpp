@@ -17,10 +17,12 @@ namespace irods::filesystem
         class iterator;
         class reverse_iterator;
 
+        // clang-format off
         using value_type                = char;
         using string_type               = std::basic_string<value_type>;
         using const_iterator            = iterator;
         using const_reverse_iterator    = reverse_iterator;
+        // clang-format on
 
         inline static const value_type dot[]     = ".";
         inline static const value_type dot_dot[] = "..";
@@ -48,6 +50,7 @@ namespace irods::filesystem
         }
 
         // Delegating constructor
+
         template <typename Source,
                   typename = std::enable_if_t<path_traits::is_pathable<Source>>>
         path(const Source& _source)
@@ -247,11 +250,13 @@ namespace irods::filesystem
     class path::iterator
     {
     public:
+        // clang-format off
         using value_type        = const path;
         using pointer           = value_type*;
         using reference         = value_type&;
         using difference_type   = std::ptrdiff_t;
         using iterator_category = std::bidirectional_iterator_tag;
+        // clang-format on
 
         iterator() = default;
 
