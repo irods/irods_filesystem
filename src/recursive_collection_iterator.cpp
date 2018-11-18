@@ -8,7 +8,7 @@ namespace irods::filesystem
 {
     // Constructors and destructor
 
-    recursive_collection_iterator::recursive_collection_iterator(conn* _conn,
+    recursive_collection_iterator::recursive_collection_iterator(rxConn* _conn,
                                                                  const path& _p,
                                                                  collection_options _opts)
         : ctx_{std::make_shared<context>()}
