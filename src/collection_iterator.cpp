@@ -14,7 +14,7 @@
 
 namespace irods::filesystem
 {
-    collection_iterator::collection_iterator(conn* _conn,
+    collection_iterator::collection_iterator(rxConn* _conn,
                                              const path& _p,
                                              collection_options _opts)
         : ctx_{}
@@ -30,7 +30,7 @@ namespace irods::filesystem
         collInp_t input{};
         std::strncpy(input.collName, _p.c_str(), _p.string().size());
 
-        ctx_->handle = rcOpenCollection(_conn, &input);
+        ctx_->handle = rxOpenCollection(_conn, &input);
 
         if (ctx_->handle < 0) {
             throw filesystem_error{"could not open collection for reading [handle => " +
@@ -44,7 +44,7 @@ namespace irods::filesystem
     collection_iterator::~collection_iterator()
     {
         if (ctx_.use_count() == 1) {
-            rcCloseCollection(ctx_->conn, ctx_->handle);
+            rxCloseCollection(ctx_->conn, ctx_->handle);
         }
     }
 
@@ -52,7 +52,7 @@ namespace irods::filesystem
     {
         collEnt_t* e{};
 
-        if (const auto ec = rcReadCollection(ctx_->conn, ctx_->handle, &e); ec < 0) {
+        if (const auto ec = rxReadCollection(ctx_->conn, ctx_->handle, &e); ec < 0) {
             if (ec == CAT_NO_ROWS_FOUND) {
                 ctx_ = nullptr;
                 return *this;

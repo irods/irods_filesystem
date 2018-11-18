@@ -32,7 +32,7 @@ namespace irods::filesystem
 
         collection_iterator() = default;
 
-        collection_iterator(conn* _conn,
+        collection_iterator(rxConn* _conn,
                             const path& _p,
                             collection_options _opts = collection_options::none);
 
@@ -46,7 +46,7 @@ namespace irods::filesystem
 
         // Observers
 
-        auto connection() -> conn*  { return ctx_->conn; }
+        auto connection() -> rxConn*  { return ctx_->conn; }
 
         auto operator*() const -> reference { return ctx_->entry; }
         auto operator->() const -> pointer  { return &ctx_->entry; }
@@ -63,7 +63,7 @@ namespace irods::filesystem
     private:
         struct context
         {
-            conn* conn{};
+            rxConn* conn{};
             path path{};
             int handle{};
             long offset{};

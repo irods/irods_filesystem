@@ -49,10 +49,10 @@ int main(int _argc, char* _argv[])
         }
 
         rErrMsg_t errors;
-        /*auto* conn = rcConnect(env.rodsHost, env.rodsPort, env.rodsUserName,
-                               env.rodsZone, 0, &errors);*/
-        auto* conn = rcConnect(env.rodsHost, env.rodsPort, "rods",
+        auto* conn = rcConnect(env.rodsHost, env.rodsPort, env.rodsUserName,
                                env.rodsZone, 0, &errors);
+        //auto* conn = rcConnect(env.rodsHost, env.rodsPort, "rods",
+                               //env.rodsZone, 0, &errors);
         if (!conn)
         {
             std::cout << "connection error.\n";
@@ -71,9 +71,25 @@ int main(int _argc, char* _argv[])
             std::cout << std::boolalpha;
 
             //fs::path home = "/tempZone";
-            //fs::path home = "/tempZone/home/kory";
+            fs::path home = "/tempZone/home/kory";
             //auto src = home / "col1.d";
             //auto dst = home / "col1.renamed.d";
+
+            for (auto&& e : home / "main.renamed.cpp")
+                std::cout << e << '\n';
+            std::cout << '\n';
+
+            std::cout << "is equal : " << (home / "main.cpp" == home / "main.renamed.cpp") << '\n';
+            std::cout << "less than: " << (home / "main.cpp" <  home / "main.renamed.cpp") << '\n';
+            std::cout << "less than: " << (home / "main.renamed.cpp" >= home) << "\n\n";
+
+            //fs::rename(conn, home / "main.cpp", home / "main.renamed.cpp");
+            //fs::rename(conn, home / "col1.renamed.d", home / "test.d");
+            fs::remove(conn, home / "src");
+
+            auto mtime = fs::last_write_time(conn, home);
+            std::cout << "last_write_time(" << home << "): " << mtime.time_since_epoch().count() << '\n';
+                //std::chrono::duration_cast<std::chrono::seconds>(mtime.time_since_epoch()).count() << '\n';
 
             //fs::rename(conn, src, dst);
             //fs::rename(conn, home / "main.cpp", dst / "main.renamed.cpp");
@@ -82,11 +98,11 @@ int main(int _argc, char* _argv[])
             fs::path root = "/";
             auto zone = root / "tempZone"; 
             auto trash = root / "tempZone/trash"; 
-            auto col4d = trash / "home/kory/col2.d/col3.d/col4.d";
+            //auto col4d = trash / "home/kory/col2.d/col3.d/col4.d";
 
             std::cout << zone << " is a valid collection  : " << fs::is_collection(conn, zone) << '\n';
             std::cout << trash << " is a valid collection : " << fs::is_collection(conn, trash) << '\n';
-            std::cout << col4d << " is an empty collection? " << fs::is_empty(conn, col4d) << '\n';
+            //std::cout << col4d << " is an empty collection? " << fs::is_empty(conn, col4d) << '\n';
 
             /*
             std::cout << "\nusing ranged-for collection_iterator:\n";

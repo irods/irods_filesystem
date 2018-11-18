@@ -79,7 +79,35 @@ namespace irods::filesystem
 
     auto path::compare(const path& _p) const noexcept -> int
     {
-        return lexicographical_compare(begin(), end(), _p.begin(), _p.end());
+        auto first1 = begin();
+        const auto last1 = end();
+
+        auto first2 = _p.begin();
+        const auto last2 = _p.end();
+
+        for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
+            if (first1->value_ < first2->value_) {
+                return -1;
+            }
+
+            if (first1->value_ > first2->value_) {
+                return 1;
+            }
+        }
+
+        // Case 1: first1 == end1 && first2 == end2 =>  0
+        // Case 2: first1 == end1 && first2 != end2 => -1
+        // Case 3: first1 != end1 && first2 == end2 =>  1
+
+        if (first1 == last1) {
+            if (first2 == last2) {
+                return 0;
+            }
+
+            return -1;
+        }
+
+        return 1;
     }
 
     auto path::root_collection() const -> path

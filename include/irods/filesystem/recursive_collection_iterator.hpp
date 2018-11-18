@@ -26,7 +26,7 @@ namespace irods::filesystem
 
         recursive_collection_iterator() = default;
 
-        recursive_collection_iterator(conn* _conn,
+        recursive_collection_iterator(rxConn* _conn,
                                       const path& _p,
                                       collection_options _opts = collection_options::none);
 
@@ -40,7 +40,7 @@ namespace irods::filesystem
 
         // Observers
 
-        auto connection() -> conn*  { return ctx_->stack.empty() ? nullptr : (*this).connection(); }
+        auto connection() -> rxConn*  { return ctx_->stack.empty() ? nullptr : (*this).connection(); }
 
         auto operator*() const -> reference { return *ctx_->stack.top(); }
         auto operator->() const -> pointer  { return &*ctx_->stack.top(); }

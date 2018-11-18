@@ -4,9 +4,27 @@
 #include <irods/rcConnect.h>
 
 #ifdef RODS_SERVER
-using conn = rsComm_t;
+    #define rxConn                  rsComm_t      
+
+    #define rxOpenCollection        rsOpenCollection
+    #define rxReadCollection        rsReadCollection
+    #define rxCloseCollection       rsCloseCollection
+    #define rxObjStat               rsObjStat      
+    #define rxModColl               rsModColl
+    #define rxRmColl                rsRmColl       
+    #define rxDataObjRename         rsDataObjRename
+    #define rxDataObjUnlink         rsDataObjUnlink
 #else
-using conn = rcComm_t;
+    #define rxConn                  rcComm_t
+
+    #define rxOpenCollection        rcOpenCollection
+    #define rxReadCollection        rcReadCollection
+    #define rxCloseCollection       rcCloseCollection
+    #define rxObjStat               rcObjStat      
+    #define rxModColl               rcModColl
+    #define rxRmColl                rcRmColl       
+    #define rxDataObjRename         rcDataObjRename
+    #define rxDataObjUnlink         rcDataObjUnlink
 #endif // RODS_SERVER
 
 #endif // IRODS_FILESYSTEM_CONFIG_HPP
