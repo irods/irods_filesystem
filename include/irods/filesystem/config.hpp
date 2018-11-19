@@ -1,7 +1,7 @@
 #ifndef IRODS_FILESYSTEM_CONFIG_HPP
 #define IRODS_FILESYSTEM_CONFIG_HPP
 
-#include <irods/rcConnect.h>
+//#include <irods/rcConnect.h>
 
 #ifdef RODS_SERVER
     #define rxConn                  rsComm_t      
@@ -14,6 +14,7 @@
     #define rxRmColl                rsRmColl       
     #define rxDataObjRename         rsDataObjRename
     #define rxDataObjUnlink         rsDataObjUnlink
+    #define rxModAccessControl      rsModAccessControl
 #else
     #define rxConn                  rcComm_t
 
@@ -25,6 +26,7 @@
     #define rxRmColl                rcRmColl       
     #define rxDataObjRename         rcDataObjRename
     #define rxDataObjUnlink         rcDataObjUnlink
+    #define rxModAccessControl      rcModAccessControl
 #endif // RODS_SERVER
 
 #endif // IRODS_FILESYSTEM_CONFIG_HPP

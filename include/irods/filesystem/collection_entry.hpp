@@ -6,7 +6,6 @@
 #include <irods/filesystem/object_status.hpp>
 
 #include <chrono>
-#include <ctime>
 
 namespace irods::filesystem
 {

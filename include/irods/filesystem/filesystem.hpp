@@ -6,6 +6,8 @@
 #include <irods/filesystem/permissions.hpp>
 #include <irods/filesystem/copy_options.hpp>
 
+#include <irods/rcConnect.h>
+
 #include <string>
 #include <istream>
 #include <ostream>
@@ -79,6 +81,7 @@ namespace irods::filesystem
     auto remove_all(rxConn* _conn, const path& _p, remove_options _opts = remove_options::none) -> std::uintmax_t;
 
     //auto permissions(rxConn* _conn, const path& _p, perms _prms, perm_options opts = perm_options::replace) -> void;
+    auto permissions(rxConn* _conn, const path& _p, perms _prms) -> void;
 
     auto rename(rxConn* _conn, const path& _from, const path& _to) -> void;
     auto move(rxConn* _conn, const path& _from, const path& _to) -> void;

@@ -10,6 +10,7 @@
 #include <irods/openCollection.h>
 #include <irods/closeCollection.h>
 #include <irods/readCollection.h>
+#include <irods/modAccessControl.h>
 #include <irods/collection.hpp>
 #include <irods/miscUtil.h>
 #include <irods/rcMisc.h>
@@ -39,6 +40,7 @@ namespace irods::filesystem
             char owner_zone[128];
             long long ctime;
             long long mtime;
+            perms prms;
         };
 
         auto stat(rxConn* _conn, const path& _p) -> stat_info
@@ -54,12 +56,44 @@ namespace irods::filesystem
                 si.size = stat_info_ptr->objSize;
                 si.type = stat_info_ptr->objType;
                 si.mode = static_cast<int>(stat_info_ptr->dataMode);
-                //si.id = stat_info_ptr->dataId;
+                si.id = std::stol(stat_info_ptr->dataId);
                 std::strncpy(si.owner_name, stat_info_ptr->ownerName, strlen(stat_info_ptr->ownerName));
                 std::strncpy(si.owner_zone, stat_info_ptr->ownerZone, strlen(stat_info_ptr->ownerZone));
                 si.ctime = std::stoll(stat_info_ptr->createTime);
                 si.mtime = std::stoll(stat_info_ptr->modifyTime);
-                freeRodsObjStat(stat_info_ptr);
+                freeRodsObjStat(stat_info_ptr); // TODO This should be put inside of irods_at_scope_exit
+
+                std::string sql;
+                bool set_perms = false;
+
+                if (DATA_OBJ_T == si.type) {
+                    set_perms = true;
+                    sql = "select DATA_ACCESS_NAME where COLL_NAME = '";
+                    sql += _p.parent_path();
+                    sql += "' and DATA_NAME = '";
+                    sql += _p.object_name();
+                    sql += "'";
+                }
+                else if (COLL_OBJ_T == si.type) {
+                    set_perms = true;
+                    sql = "select COLL_ACCESS_NAME where COLL_NAME = '";
+                    sql += _p;
+                    sql += "'";
+                }
+
+                if (set_perms) {
+                    for (const auto& row : irods::query{_conn, sql}) {
+                        if (!row.empty()) {
+                            if      (row[0] == "null")      { si.prms = perms::null; }
+                            else if (row[0] == "read")      { si.prms = perms::read; }
+                            else if (row[0] == "write")     { si.prms = perms::write; }
+                            else if (row[0] == "own")       { si.prms = perms::own; }
+                            else if (row[0] == "inherit")   { si.prms = perms::inherit; }
+                            else if (row[0] == "noinherit") { si.prms = perms::noinherit; }
+                            else                            { si.prms = perms::null; }
+                        }
+                    }
+                }
             }
 
             return si;
@@ -406,9 +440,77 @@ namespace irods::filesystem
         return 0;
     }
 
-    auto permissions(rxConn* _conn, const path& _p, perms _prms, perm_options _opts) -> void
+    auto permissions(rxConn* _conn, const path& _p, perms _prms) -> void
     {
+        detail::throw_if_path_length_exceeds_limit(_p);
 
+        /*
+        const auto assign = [](char* _dst, char* _buf, char* _src)
+        {
+            std::string temp = _src;
+            std::strncpy(_buffer, temp.c_str(), temp.size());
+            _dst = _buffer;
+        };
+        */
+
+        modAccessControlInp_t input{};
+        std::string temp;
+
+        /*
+        temp = _conn->clientUser.userName;
+        std::vector<char> username{std::begin(temp), std::end(temp)};
+        username.push_back('\0');
+        input.userName = &username[0];
+        */
+
+        char username[100]{};
+        //assign(input.userName, username, _conn->clientUser.userName);
+        temp = _conn->clientUser.userName;
+        std::strncpy(username, temp.c_str(), temp.size());
+        input.userName = username;
+
+        char zone[100]{};
+        temp = _conn->clientUser.rodsZone;
+        std::strncpy(zone, temp.c_str(), temp.size());
+        input.zone = zone;
+
+        char path[1024]{};
+        std::strncpy(path, _p.c_str(), _p.string().size());
+        input.path = path;
+
+        char access[10]{};
+
+        switch (_prms) {
+            case perms::null:
+                std::strncpy(access, "null", 4);
+                break;
+
+            case perms::read:
+                std::strncpy(access, "read", 4);
+                break;
+
+            case perms::write:
+                std::strncpy(access, "write", 5);
+                break;
+
+            case perms::own:
+                std::strncpy(access, "own", 3);
+                break;
+
+            case perms::inherit:
+                std::strncpy(access, "inherit", 7);
+                break;
+
+            case perms::noinherit:
+                std::strncpy(access, "noinherit", 9);
+                break;
+        }
+
+        input.accessLevel = access;
+
+        if (const auto ec = rxModAccessControl(_conn, &input); ec != 0) {
+            throw filesystem_error{"error modifying permissions [ec => " + std::to_string(ec) + ']'};
+        }
     }
 
     auto rename(rxConn* _conn, const path& _old_p, const path& _new_p) -> void
@@ -494,6 +596,8 @@ namespace irods::filesystem
     {
         auto s = stat(_conn, _p);
         object_status status;
+
+        status.permissions(s.prms);
 
         switch (s.type) {
             case DATA_OBJ_T:
