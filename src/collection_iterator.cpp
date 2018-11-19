@@ -3,9 +3,15 @@
 #include <irods/filesystem/detail.hpp>
 #include <irods/filesystem/filesystem_error.hpp>
 
-#include <irods/openCollection.h>
-#include <irods/readCollection.h>
-#include <irods/closeCollection.h>
+#ifdef RODS_SERVER
+    #include <irods/rsOpenCollection.hpp>
+    #include <irods/rsReadCollection.hpp>
+    #include <irods/rsCloseCollection.hpp>
+#else
+    #include <irods/openCollection.h>
+    #include <irods/readCollection.h>
+    #include <irods/closeCollection.h>
+#endif // RODS_SERVER
 
 #include <functional>
 #include <iostream>
@@ -14,6 +20,19 @@
 
 namespace irods::filesystem
 {
+    namespace
+    {
+        const auto rsReadCollection = [](rsComm_t* _conn, int _handle, collEnt_t** _collEnt) -> int
+        {
+            return ::rsReadCollection(_conn, &_handle, _collEnt);
+        };
+
+        const auto rsCloseCollection = [](rsComm_t* _conn, int _handle) -> int
+        {
+            return ::rsCloseCollection(_conn, &_handle);
+        };
+    } // anonymous namespace
+
     collection_iterator::collection_iterator(rxConn* _conn,
                                              const path& _p,
                                              collection_options _opts)

@@ -50,7 +50,7 @@ namespace irods::filesystem
     //auto copy_collection(rxConn* _conn, const path& _from, const path& _to, copy_options _options = copy_options::none) -> bool;
 
     auto create_collection(rxConn* _conn, const path& _p) -> bool; // Implies perms::all
-    auto create_collection(rxConn* _conn, const path& _p, const path& _existing_p) -> bool;
+    //auto create_collection(rxConn* _conn, const path& _p, const path& _existing_p) -> bool;
     auto create_collections(rxConn* _conn, const path& _p) -> bool;
 
     //auto current_path(rxConn* _conn) -> path;

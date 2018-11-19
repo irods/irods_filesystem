@@ -17,6 +17,7 @@ namespace irods::filesystem
     public:
         // Observers
 
+        // clang-format off
         operator const path&() const noexcept                           { return path_; }
         auto path() const noexcept -> const path&                       { return path_; }
         auto exists() const noexcept -> bool                            { return filesystem::exists(status_); }
@@ -47,6 +48,7 @@ namespace irods::filesystem
         auto operator<=(const collection_entry& _rhs) -> bool   { return path_ <= _rhs.path_; }
         auto operator> (const collection_entry& _rhs) -> bool   { return path_ >  _rhs.path_; }
         auto operator>=(const collection_entry& _rhs) -> bool   { return path_ >= _rhs.path_; }
+        // clang-format on
 
     private:
         friend class collection_iterator;

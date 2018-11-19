@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.7.0)
-project(libirods_filesystem LANGUAGES CXX C)
+project(irods_filesystem LANGUAGES CXX C)
 
 set(TARGET irods_filesystem)
 
@@ -45,5 +45,10 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -stdlib=libc++ -Wl,-
 
 add_library(${TARGET} SHARED ${HEADERS} ${SOURCE})
 target_compile_options(${TARGET} PRIVATE -std=c++17 -nostdinc++ -pthread)
+
+if (DEFINED RODS_SERVER)
+    target_compile_definitions(${TARGET} PRIVATE RODS_SERVER)
+endif()
+
 target_include_directories(${TARGET} PRIVATE ${INCLUDE_DIRS})
 target_link_libraries(${TARGET} PRIVATE ${LIBS})
