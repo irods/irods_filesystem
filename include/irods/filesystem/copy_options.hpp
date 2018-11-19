@@ -10,7 +10,7 @@ namespace irods::filesystem
     {
         none                    = 0,
         skip_existing           = 1 << 1,
-        overwrite_if_exists     = 1 << 2,
+        overwrite_existing      = 1 << 2,
         update_existing         = 1 << 3,
         recursive               = 1 << 4,
         collections_only        = 1 << 5,
@@ -37,6 +37,23 @@ namespace irods::filesystem
     inline auto operator&(copy_options _lhs, copy_options _rhs) noexcept -> copy_options
     {
         return _lhs &= _rhs;
+    }
+
+    inline auto operator^=(copy_options& _lhs, copy_options _rhs) noexcept -> copy_options&
+    {
+        using T = std::underlying_type_t<copy_options>;
+        return _lhs = static_cast<copy_options>(static_cast<T>(_lhs) ^ static_cast<T>(_rhs));
+    }
+
+    inline auto operator^(copy_options _lhs, copy_options _rhs) noexcept -> copy_options
+    {
+        return _lhs ^= _rhs;
+    }
+
+    inline auto operator~(copy_options& _value) noexcept -> copy_options&
+    {
+        using T = std::underlying_type_t<copy_options>;
+        return _value = static_cast<copy_options>(~static_cast<T>(_value));
     }
 } // namespace irods::filesystem
 

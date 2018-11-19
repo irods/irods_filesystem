@@ -5,30 +5,86 @@
 #include <irods/filesystem/filesystem_error.hpp>
 #include <irods/filesystem/detail.hpp>
 
-#include <irods/rodsClient.h>
-#include <irods/objStat.h>
-#include <irods/openCollection.h>
-#include <irods/closeCollection.h>
-#include <irods/readCollection.h>
-#include <irods/modAccessControl.h>
-#include <irods/collection.hpp>
-#include <irods/miscUtil.h>
+#ifdef RODS_SERVER
+    //#include <irods/rodsClient.h>
+    #include <irods/rods.h>
+    #include <irods/apiHeaderAll.h>
+    #include <irods/rsObjStat.hpp>
+    #include <irods/rsDataObjCopy.hpp>
+    #include <irods/rsDataObjRename.hpp>
+    #include <irods/rsDataObjUnlink.hpp>
+    #include <irods/rsOpenCollection.hpp>
+    #include <irods/rsCloseCollection.hpp>
+    #include <irods/rsReadCollection.hpp>
+    #include <irods/rsModAccessControl.hpp>
+    #include <irods/rsCollCreate.hpp>
+    //#include <irods/collection.hpp>
+    //#include <irods/miscUtil.h>
+    #include <irods/rsModColl.hpp>
+    #include <irods/rsRmColl.hpp>
+#else
+    #include <irods/rodsClient.h>
+    #include <irods/objStat.h>
+    #include <irods/dataObjCopy.h>
+    #include <irods/dataObjRename.h>
+    #include <irods/dataObjUnlink.h>
+    #include <irods/openCollection.h>
+    #include <irods/closeCollection.h>
+    #include <irods/readCollection.h>
+    #include <irods/modAccessControl.h>
+    #include <irods/collCreate.h>
+    //#include <irods/collection.hpp>
+    //#include <irods/miscUtil.h>
+    #include <irods/modColl.h>
+    #include <irods/rmColl.h>
+#endif // RODS_SERVER
+
+// TODO miscUtil.h and collCreate.h have mkColl implementations.
+// Which one should be used?
+// TODO Is collection.hpp needed? It also has collection functions.
+
 #include <irods/rcMisc.h>
-#include <irods/rmColl.h>
 #include <irods/irods_log.hpp>
 #include <irods/irods_error.hpp>
 #include <irods/irods_exception.hpp>
 #include <irods/irods_query.hpp>
+#include <irods/irods_at_scope_exit.hpp>
 
 #include <iostream>
 #include <string>
 #include <iterator>
 #include <exception>
+#include <sstream>
+#include <iomanip>
 
 namespace irods::filesystem
 {
     namespace
     {
+#ifdef RODS_SERVER
+        int rsDataObjCopy(rsComm_t* _conn, dataObjCopyInp_t* _dataObjCopyInp)
+        {
+            //_dataObjCopyInp->srcDataObjInp.oprType = COPY_SRC;
+            //_dataObjCopyInp->destDataObjInp.oprType = COPY_DEST;
+
+            transferStat_t* ts_ptr{};
+
+            const auto ec = rsDataObjCopy(_conn, _dataObjCopyInp, &ts_ptr);
+
+            if (ts_ptr) {
+                std::free(ts_ptr);
+            }
+
+            return ec;
+        }
+
+        const auto rsRmColl = [](rsComm_t* _conn, collInp_t* _rmCollInp, int) -> int
+        {
+            collOprStat_t* stat{};
+            return ::rsRmColl(_conn, _rmCollInp, &stat);
+        };
+#endif // RODS_SERVER
+
         struct stat_info
         {
             int error;
@@ -36,8 +92,8 @@ namespace irods::filesystem
             int type;
             int mode;
             long id;
-            char owner_name[128];
-            char owner_zone[128];
+            char owner_name[NAME_LEN];
+            char owner_zone[NAME_LEN];
             long long ctime;
             long long mtime;
             perms prms;
@@ -52,6 +108,10 @@ namespace irods::filesystem
             stat_info si{};
 
             if (const auto ec = rxObjStat(_conn, &input, &stat_info_ptr); ec >= 0 && stat_info_ptr) {
+                irods::at_scope_exit<std::function<void()>> {[stat_info_ptr] {
+                    freeRodsObjStat(stat_info_ptr);
+                }};
+
                 si.error = ec;
                 si.size = stat_info_ptr->objSize;
                 si.type = stat_info_ptr->objType;
@@ -61,7 +121,6 @@ namespace irods::filesystem
                 std::strncpy(si.owner_zone, stat_info_ptr->ownerZone, strlen(stat_info_ptr->ownerZone));
                 si.ctime = std::stoll(stat_info_ptr->createTime);
                 si.mtime = std::stoll(stat_info_ptr->modifyTime);
-                freeRodsObjStat(stat_info_ptr); // TODO This should be put inside of irods_at_scope_exit
 
                 std::string sql;
                 bool set_perms = false;
@@ -211,7 +270,7 @@ namespace irods::filesystem
         }
 
         if (is_data_object(from_status)) {
-            if (copy_options::collections_only == _options) {
+            if (copy_options::collections_only == (copy_options::collections_only & _options)) {
                 return;
             }
 
@@ -221,6 +280,7 @@ namespace irods::filesystem
             }
 
             copy_data_object(_conn, _from, _to, _options);
+
             return;
         }
 
@@ -245,7 +305,59 @@ namespace irods::filesystem
 
     auto copy_data_object(rxConn* _conn, const path& _from, const path& _to, copy_options _options) -> bool
     {
-        return false;
+        detail::throw_if_path_length_exceeds_limit(_from);
+        detail::throw_if_path_length_exceeds_limit(_to);
+
+        // If "_options" is not a power of 2, then report an error.
+        // "_options" cannot have multiple options set.
+        if (const auto v = static_cast<std::underlying_type_t<copy_options>>(_options);
+            !(v && !(v & (v - 1))))
+        {
+            throw filesystem_error{"too many copy options set"}; 
+        }
+
+        if (!is_data_object(_conn, _from)) {
+            throw filesystem_error{"source path does not exist or is not a data object"}; 
+        }
+
+        if (auto s = status(_conn, _to); exists(s)) {
+            if (equivalent(_from, _to)) {
+                throw filesystem_error{"source and destination paths are the same"}; 
+            }
+
+            if (!is_data_object(s)) {
+                throw filesystem_error{"destination path is not a data object"}; 
+            }
+
+            if (copy_options::none == _options) {
+                throw filesystem_error{"no copy options set"}; 
+            }
+
+            if (copy_options::skip_existing == _options) {
+                return false;
+            }
+
+            if (copy_options::overwrite_existing == _options) {
+                // NOP
+            }
+
+            if (copy_options::update_existing == _options) {
+                if (last_write_time(_conn, _from) <= last_write_time(_conn, _to)) {
+                    return false;
+                }
+            }
+        }
+
+        dataObjCopyInp_t input{};
+        std::strncpy(input.srcDataObjInp.objPath, _from.c_str(), _from.string().size());
+        std::strncpy(input.destDataObjInp.objPath, _to.c_str(), _to.string().size());
+        addKeyVal(&input.destDataObjInp.condInput, DEST_RESC_NAME_KW, "");
+
+        if (const auto ec = rxDataObjCopy(_conn, &input); ec < 0) {
+            throw filesystem_error{"error copying data object [error code => " + std::to_string(ec) + ']'};
+        }
+
+        return true;
     }
 
     /*
@@ -257,38 +369,46 @@ namespace irods::filesystem
 
     auto create_collection(rxConn* _conn, const path& _p) -> bool // Implies perms::all
     {
+        detail::throw_if_path_length_exceeds_limit(_p);
+
+        if (!exists(_conn, _p.parent_path())) {
+            throw filesystem_error{"the parent path must exist [path => " + _p.string() + ']'};
+        }
+
         if (exists(_conn, _p)) {
             return false;
         }
 
-        char buf[1024]{};
-        std::strncpy(buf, _p.c_str(), _p.string().size());
+        collInp_t input{};
+        std::strncpy(input.collName, _p.c_str(), _p.string().size());
 
-        return mkColl(_conn, buf) == 0;
+        if (const auto ec = rxCollCreate(_conn, &input); ec != 0) {
+            throw filesystem_error{"error creating collection [error code => " + std::to_string(ec) + ']'};
+        }
+
+        return true;
     }
 
+    /*
     auto create_collection(rxConn* _conn, const path& _p, const path& _existing_p) -> bool
     {
         return false;
     }
+    */
 
     auto create_collections(rxConn* _conn, const path& _p) -> bool
     {
+        detail::throw_if_path_length_exceeds_limit(_p);
+
         if (exists(_conn, _p)) {
             return false;
         }
 
-        bool created_one = false;
-        path tree;
+        collInp_t input{};
+        std::strncpy(input.collName, _p.c_str(), _p.string().size());
+        addKeyVal(&input.condInput, RECURSIVE_OPR__KW, "");
 
-        for (const auto& e : _p) {
-            tree /= e;
-            if (create_collection(_conn, tree)) {
-                created_one = true;
-            }
-        }
-
-        return created_one;
+        return rxCollCreate(_conn, &input) == 0;
     }
 
     //auto current_path(rxConn* _conn) -> path;
@@ -349,7 +469,7 @@ namespace irods::filesystem
 
     auto is_other(rxConn* _conn, const path& _p) -> bool
     {
-        return is_data_object(status(_conn, _p));
+        return is_other(status(_conn, _p));
     }
 
     auto is_data_object(object_status _s) noexcept -> bool
@@ -367,7 +487,7 @@ namespace irods::filesystem
         const auto info = stat(_conn, _p);
 
         if (info.error < 0) {
-            throw filesystem_error{"could not retrieve mtime [ec => " +
+            throw filesystem_error{"could not retrieve mtime [error code => " +
                                    std::to_string(info.error) + ']'};
         }
 
@@ -380,25 +500,21 @@ namespace irods::filesystem
 
         const auto seconds = _new_time.time_since_epoch();
 
-        // Timestamps are 11 characters long. Will need to add leading zeros
-        // until the length is 11.
-#if 0
         collInp_t input{};
         std::strncpy(input.collName, _p.c_str(), _p.string().size());
-        auto new_time = std::to_string(seconds.count());
-        addKeyVal(&input.condInput, COLLECTION_MTIME_KW, new_time.c_str());
+        std::stringstream new_time;
+        new_time << std::setfill('0') << std::setw(11) << std::to_string(seconds.count());
+        addKeyVal(&input.condInput, COLLECTION_MTIME_KW, new_time.str().c_str());
 
         if (const auto ec = rxModColl(_conn, &input); ec != 0) {
-            throw filesystem_error{"mtime update failure [ec => " + std::to_string(ec) + ']'};
+            throw filesystem_error{"mtime update failure [error code => " + std::to_string(ec) + ']'};
         }
-#endif
     }
 
     auto remove(rxConn* _conn, const path& _p, remove_options _opts) -> bool
     {
         const auto no_trash = (remove_options::no_trash == _opts);
         constexpr auto recursive = false;
-
         return remove_impl(_conn, _p, {no_trash, recursive});
     }
 
@@ -444,37 +560,17 @@ namespace irods::filesystem
     {
         detail::throw_if_path_length_exceeds_limit(_p);
 
-        /*
-        const auto assign = [](char* _dst, char* _buf, char* _src)
-        {
-            std::string temp = _src;
-            std::strncpy(_buffer, temp.c_str(), temp.size());
-            _dst = _buffer;
-        };
-        */
-
         modAccessControlInp_t input{};
-        std::string temp;
 
-        /*
-        temp = _conn->clientUser.userName;
-        std::vector<char> username{std::begin(temp), std::end(temp)};
-        username.push_back('\0');
-        input.userName = &username[0];
-        */
-
-        char username[100]{};
-        //assign(input.userName, username, _conn->clientUser.userName);
-        temp = _conn->clientUser.userName;
-        std::strncpy(username, temp.c_str(), temp.size());
+        char username[NAME_LEN]{};
+        rstrcpy(username, _conn->clientUser.userName, NAME_LEN);
         input.userName = username;
 
-        char zone[100]{};
-        temp = _conn->clientUser.rodsZone;
-        std::strncpy(zone, temp.c_str(), temp.size());
+        char zone[NAME_LEN]{};
+        rstrcpy(zone, _conn->clientUser.rodsZone, NAME_LEN);
         input.zone = zone;
 
-        char path[1024]{};
+        char path[MAX_NAME_LEN]{};
         std::strncpy(path, _p.c_str(), _p.string().size());
         input.path = path;
 
@@ -509,7 +605,7 @@ namespace irods::filesystem
         input.accessLevel = access;
 
         if (const auto ec = rxModAccessControl(_conn, &input); ec != 0) {
-            throw filesystem_error{"error modifying permissions [ec => " + std::to_string(ec) + ']'};
+            throw filesystem_error{"error modifying permissions [error code => " + std::to_string(ec) + ']'};
         }
     }
 
@@ -539,6 +635,7 @@ namespace irods::filesystem
             throw filesystem_error{R"_("_new_p" cannot end with "." or "..")_"};
         }
 
+        /*
         if (auto s = status(_conn, _old_p); is_data_object(s)) {
             // Case 2: "_new_p" is an existing non-collection object.
             if (exists(_conn, _new_p)) {
@@ -570,6 +667,7 @@ namespace irods::filesystem
         else if (is_other(s)) {
             throw filesystem_error{R"_("_new_p" must be a collection or data object)_"};
         }
+        */
 
         dataObjCopyInp_t input{};
         std::strncpy(input.srcDataObjInp.objPath, _old_p.c_str(), _old_p.string().size());
