@@ -5,6 +5,17 @@ namespace irods::filesystem
 {
     enum class perms
     {
+        null,
+        read,
+        write,
+        own,
+        inherit,
+        noinherit
+    };
+
+    /*
+    enum class perms
+    {
         null                    = 1000,
         execute                 = 1010,
         read_annotation         = 1020,
@@ -22,9 +33,14 @@ namespace irods::filesystem
         create_token            = 1140,
         delete_token            = 1150,
         curate                  = 1160,
-        own                     = 1200
-    };
+        own                     = 1200,
 
+        inherit                 = 9000,
+        no_inherit              = 9010
+    };
+    */
+
+    /*
     enum class perm_options
     {
         replace,
@@ -32,7 +48,6 @@ namespace irods::filesystem
         remove
     };
 
-    /*
     enum class perms
     {
         none,

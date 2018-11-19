@@ -6,6 +6,8 @@
 #include <irods/filesystem/collection_entry.hpp>
 #include <irods/filesystem/path.hpp>
 
+#include <irods/rcConnect.h>
+
 #include <iterator>
 #include <memory>
 

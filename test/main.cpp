@@ -87,8 +87,12 @@ int main(int _argc, char* _argv[])
             //fs::rename(conn, home / "col1.renamed.d", home / "test.d");
             fs::remove(conn, home / "src");
 
-            auto mtime = fs::last_write_time(conn, home);
-            std::cout << "last_write_time(" << home << "): " << mtime.time_since_epoch().count() << '\n';
+            std::cout << "perms: " << (fs::status(conn, home / "main.renamed.cpp").permissions() == fs::perms::own) << '\n';
+            fs::permissions(conn, home / "main.renamed.cpp", fs::perms::own);
+            std::cout << "perms: " << (fs::status(conn, home / "main.renamed.cpp").permissions() == fs::perms::own) << '\n';
+
+            auto mtime = fs::last_write_time(conn, home / "main.renamed.cpp");
+            std::cout << "last_write_time(" << (home / "main.renamed.cpp") << "): " << mtime.time_since_epoch().count() << '\n';
                 //std::chrono::duration_cast<std::chrono::seconds>(mtime.time_since_epoch()).count() << '\n';
 
             //fs::rename(conn, src, dst);
@@ -98,11 +102,10 @@ int main(int _argc, char* _argv[])
             fs::path root = "/";
             auto zone = root / "tempZone"; 
             auto trash = root / "tempZone/trash"; 
-            //auto col4d = trash / "home/kory/col2.d/col3.d/col4.d";
 
-            std::cout << zone << " is a valid collection  : " << fs::is_collection(conn, zone) << '\n';
-            std::cout << trash << " is a valid collection : " << fs::is_collection(conn, trash) << '\n';
-            //std::cout << col4d << " is an empty collection? " << fs::is_empty(conn, col4d) << '\n';
+            std::cout << zone << " is a valid collection: " << fs::is_collection(conn, zone) << '\n';
+            std::cout << trash << " is a valid collection: " << fs::is_collection(conn, trash) << '\n';
+            std::cout << home << " is a valid collection: " << fs::is_collection(conn, home) << '\n';
 
             /*
             std::cout << "\nusing ranged-for collection_iterator:\n";
