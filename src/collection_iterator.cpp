@@ -18,7 +18,7 @@
 #include <string>
 #include <cassert>
 
-namespace irods::filesystem
+namespace irods::experimental::filesystem
 {
     namespace
     {
@@ -77,19 +77,17 @@ namespace irods::filesystem
                 return *this;
             }
             
-            throw filesystem_error{"could not read collection entry [ec => " +
+            throw filesystem_error{"could not read collection entry [error code => " +
                                    std::to_string(ec) + ']'};
         }
 
-        ++ctx_->offset;
-
-        /*
         irods::at_scope_exit<std::function<void()> at_scope_exit{[e] {
             if (entry) {
                 freeCollEnt(e);
             }
         }};
-        */
+
+        ++ctx_->offset;
 
         auto& entry = ctx_->entry;
 
@@ -98,6 +96,7 @@ namespace irods::filesystem
         entry.data_mode_ = e->dataMode;
         entry.data_size_ = e->dataSize;
 
+        // clang-format off
         if (e->dataId)      { entry.data_id_ = e->dataId; }
         if (e->createTime)  { entry.ctime_ = std::stoll(e->createTime); }
         if (e->modifyTime)  { entry.mtime_ = std::stoll(e->modifyTime); }
@@ -107,6 +106,7 @@ namespace irods::filesystem
         if (e->phyPath)     { entry.phy_path_ = e->phyPath; }
         if (e->ownerName)   { entry.owner_ = e->ownerName; }
         if (e->dataType)    { entry.data_type_ = e->dataType; }
+        // clang-format on
 
         switch (e->objType) {
             case COLL_OBJ_T:
@@ -124,9 +124,7 @@ namespace irods::filesystem
                 break;
         }
 
-        freeCollEnt(e);
-
         return *this;
     }
-} // namespace irods::filesystem
+} // namespace irods::experimental::filesystem
 

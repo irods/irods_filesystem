@@ -11,7 +11,7 @@
 #include <iterator>
 #include <memory>
 
-namespace irods::filesystem
+namespace irods::experimental::filesystem
 {
     enum class collection_options : std::uint8_t
     {
@@ -86,6 +86,6 @@ namespace irods::filesystem
     {
         return {};
     }
-} // namespace irods::filesystem
+} // namespace irods::experimental::filesystem
 
 #endif // IRODS_FILESYSTEM_COLLECTION_ITERATOR_HPP

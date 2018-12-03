@@ -8,7 +8,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-namespace irods::filesystem
+namespace irods::experimental::filesystem
 {
     namespace
     {
@@ -363,5 +363,5 @@ namespace irods::filesystem
         _p = t;
         return _is;
     }
-} // namespace irods::filesystem
+} // namespace irods::experimental::filesystem
 

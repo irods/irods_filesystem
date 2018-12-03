@@ -6,7 +6,7 @@
 
 #include <cassert>
 
-namespace fs = irods::filesystem;
+namespace fs = irods::experimental::filesystem;
 
 int main(int _argc, char* _argv[])
 {

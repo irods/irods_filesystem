@@ -9,7 +9,7 @@
 
 #include <irods/filesystem/path_traits.hpp>
 
-namespace irods::filesystem
+namespace irods::experimental::filesystem
 {
     class path
     {
@@ -374,6 +374,6 @@ namespace irods::filesystem
     auto swap(path& _lhs, path& _rhs) -> void;
 
     auto hash_value(const path& _p) -> std::size_t;
-} // namespace irods::filesystem
+} // namespace irods::experimental::filesystem
 
 #endif // IRODS_FILESYSTEM_PATH_HPP

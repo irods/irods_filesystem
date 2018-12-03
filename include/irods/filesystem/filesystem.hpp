@@ -14,7 +14,7 @@
 #include <chrono>
 #include <cstdint>
 
-namespace irods::filesystem
+namespace irods::experimental::filesystem
 {
     class path;
 
@@ -95,6 +95,6 @@ namespace irods::filesystem
     auto status_known(object_status _s) noexcept -> bool;
 
     //auto system_complete(rxConn* _conn, const path& _p) -> path;
-} // namespace irods::filesystem
+} // namespace irods::experimental::filesystem
 
 #endif // IRODS_FILESYSTEM_FILESYSTEM_HPP

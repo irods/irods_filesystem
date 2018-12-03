@@ -5,7 +5,7 @@
 #include <vector>
 #include <list>
 
-namespace irods::filesystem
+namespace irods::experimental::filesystem
 {
     class collection_entry;
         
@@ -40,6 +40,6 @@ namespace irods::filesystem
         constexpr bool is_pathable_v = is_pathable<T>::value;
 #endif
     } // namespace path_traits
-} // namespace irods::filesystem
+} // namespace irods::experimental::filesystem
 
 #endif // IRODS_FILESYSTEM_PATH_TRAITS_HPP

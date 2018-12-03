@@ -7,7 +7,7 @@
 
 #include <chrono>
 
-namespace irods::filesystem
+namespace irods::experimental::filesystem
 {
     class collection_iterator;
     class recursive_collection_iterator;
@@ -71,6 +71,6 @@ namespace irods::filesystem
         mutable std::string data_type_;
         // mutable specColl_t spec_coll_;
     };
-} // namespace irods::filesystem
+} // namespace irods::experimental::filesystem
 
 #endif // IRODS_FILESYSTEM_COLLECTION_ENTRY_HPP
