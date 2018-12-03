@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-namespace irods::filesystem
+namespace irods::experimental::filesystem
 {
     // Constructors and destructor
 
@@ -74,5 +74,5 @@ namespace irods::filesystem
 
         ctx_->stack.pop();
     }
-} // namespace irods::filesystem
+} // namespace irods::experimental::filesystem
 

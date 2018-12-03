@@ -4,7 +4,7 @@
 #include <irods/filesystem/filesystem.hpp>
 #include <irods/filesystem/permissions.hpp>
 
-namespace irods::filesystem
+namespace irods::experimental::filesystem
 {
     enum class object_type
     {
@@ -50,6 +50,6 @@ namespace irods::filesystem
         object_type type_;
         perms perms_;
     };
-} // namespace irods::filesystem
+} // namespace irods::experimental::filesystem
 
 #endif // IRODS_FILESYSTEM_OBJECT_STATUS_HPP

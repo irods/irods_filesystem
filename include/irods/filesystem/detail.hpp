@@ -6,7 +6,7 @@
 
 #include <irods/rodsDef.h>
 
-namespace irods::filesystem::detail
+namespace irods::experimental::filesystem::detail
 {
     inline void throw_if_path_length_exceeds_limit(const irods::filesystem::path& _p)
     {
@@ -19,6 +19,6 @@ namespace irods::filesystem::detail
     {
         return path::separator == _c;
     }
-} // irods::filesystem::detail
+} // irods::experimental::filesystem::detail
 
 #endif // IRODS_FILESYSTEM_DETAIL_HPP

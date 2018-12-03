@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace irods::filesystem
+namespace irods::experimental::filesystem
 {
     enum class copy_options : std::uint8_t
     {
@@ -55,6 +55,6 @@ namespace irods::filesystem
         using T = std::underlying_type_t<copy_options>;
         return _value = static_cast<copy_options>(~static_cast<T>(_value));
     }
-} // namespace irods::filesystem
+} // namespace irods::experimental::filesystem
 
 #endif // IRODS_FILESYSTEM_COPY_OPTIONS_HPP

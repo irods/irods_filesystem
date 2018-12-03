@@ -1,7 +1,7 @@
 #ifndef IRODS_FILESYSTEM_PERMISSIONS_HPP
 #define IRODS_FILESYSTEM_PERMISSIONS_HPP
 
-namespace irods::filesystem
+namespace irods::experimental::filesystem
 {
     enum class perms
     {
@@ -71,6 +71,6 @@ namespace irods::filesystem
         unknown
     };
     */
-} // namespace irods::filesystem
+} // namespace irods::experimental::filesystem
 
 #endif // IRODS_FILESYSTEM_PERMISSIONS_HPP

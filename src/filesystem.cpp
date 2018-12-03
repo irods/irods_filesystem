@@ -57,7 +57,7 @@
 #include <sstream>
 #include <iomanip>
 
-namespace irods::filesystem
+namespace irods::experimental::filesystem
 {
     namespace
     {
@@ -726,5 +726,5 @@ namespace irods::filesystem
     }
 
     //auto system_complete(rxConn* _conn, const path& _p) -> path;
-} // namespace irods::filesystem
+} // namespace irods::experimental::filesystem
 
