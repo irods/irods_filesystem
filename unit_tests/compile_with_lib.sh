@@ -1,6 +1,6 @@
 #! /bin/bash
 
-source_files='test/main.cpp'
+source_files='main.cpp path.cpp'
 
 clang++ \
     -std=c++17 \
@@ -9,10 +9,9 @@ clang++ \
     -pthread \
     -Wall \
     -I/opt/irods-externals/clang6.0-0/include/c++/v1 \
-    -I/usr/include/irods \
-    -I./include \
     -I/opt/irods-externals/boost1.67.0-0/include \
-    -L./_build\
+    -I/opt/irods-externals/catch22.3.0-0/include \
+    -I/usr/include/irods \
     -o example \
     $source_files \
     -lirods_client \
