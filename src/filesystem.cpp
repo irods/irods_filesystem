@@ -5,7 +5,7 @@
 #include <irods/filesystem/filesystem_error.hpp>
 #include <irods/filesystem/detail.hpp>
 
-#ifdef RODS_SERVER
+#if defined(RODS_SERVER) || defined(RODS_CLERVER)
     //#include <irods/rodsClient.h>
     #include <irods/rods.h>
     #include <irods/apiHeaderAll.h>
@@ -37,7 +37,7 @@
     //#include <irods/miscUtil.h>
     #include <irods/modColl.h>
     #include <irods/rmColl.h>
-#endif // RODS_SERVER
+#endif // RODS_SERVER or RODS_CLERVER
 
 // TODO miscUtil.h and collCreate.h have mkColl implementations.
 // Which one should be used?
@@ -61,7 +61,7 @@ namespace irods::experimental::filesystem
 {
     namespace
     {
-#ifdef RODS_SERVER
+#if defined(RODS_SERVER) || defined(RODS_CLERVER)
         int rsDataObjCopy(rsComm_t* _conn, dataObjCopyInp_t* _dataObjCopyInp)
         {
             //_dataObjCopyInp->srcDataObjInp.oprType = COPY_SRC;
@@ -83,7 +83,7 @@ namespace irods::experimental::filesystem
             collOprStat_t* stat{};
             return ::rsRmColl(_conn, _rmCollInp, &stat);
         };
-#endif // RODS_SERVER
+#endif // RODS_SERVER or RODS_CLERVER
 
         struct stat_info
         {

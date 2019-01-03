@@ -8,10 +8,10 @@
 
 namespace irods::experimental::filesystem::detail
 {
-    inline void throw_if_path_length_exceeds_limit(const irods::filesystem::path& _p)
+    inline void throw_if_path_length_exceeds_limit(const irods::experimental::filesystem::path& _p)
     {
         if (_p.string().size() > MAX_NAME_LEN) {
-            throw irods::filesystem::filesystem_error{"path length exceeds max path size"};
+            throw irods::experimental::filesystem::filesystem_error{"path length exceeds max path size"};
         }
     }
 

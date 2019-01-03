@@ -1,7 +1,7 @@
 #ifndef IRODS_FILESYSTEM_CONFIG_HPP
 #define IRODS_FILESYSTEM_CONFIG_HPP
 
-#ifdef RODS_SERVER
+#if defined(RODS_SERVER) || defined(RODS_CLERVER)
     #define rxConn                  rsComm_t
 
     #define rxOpenCollection        rsOpenCollection
@@ -29,6 +29,6 @@
     #define rxDataObjRename         rcDataObjRename
     #define rxDataObjUnlink         rcDataObjUnlink
     #define rxModAccessControl      rcModAccessControl
-#endif // RODS_SERVER
+#endif // RODS_SERVER or RODS_CLERVER
 
 #endif // IRODS_FILESYSTEM_CONFIG_HPP

@@ -3,7 +3,7 @@
 #include <irods/filesystem/detail.hpp>
 #include <irods/filesystem/filesystem_error.hpp>
 
-#ifdef RODS_SERVER
+#if defined(RODS_SERVER) || defined(RODS_CLERVER)
     #include <irods/rsOpenCollection.hpp>
     #include <irods/rsReadCollection.hpp>
     #include <irods/rsCloseCollection.hpp>
@@ -11,7 +11,9 @@
     #include <irods/openCollection.h>
     #include <irods/readCollection.h>
     #include <irods/closeCollection.h>
-#endif // RODS_SERVER
+#endif // RODS_SERVER or RODS_CLERVER
+
+#include <irods/irods_at_scope_exit.hpp>
 
 #include <functional>
 #include <iostream>
@@ -20,6 +22,7 @@
 
 namespace irods::experimental::filesystem
 {
+#if defined(RODS_SERVER) || defined(RODS_CLERVER)
     namespace
     {
         const auto rsReadCollection = [](rsComm_t* _conn, int _handle, collEnt_t** _collEnt) -> int
@@ -32,6 +35,7 @@ namespace irods::experimental::filesystem
             return ::rsCloseCollection(_conn, &_handle);
         };
     } // anonymous namespace
+#endif // RODS_SERVER or RODS_CLERVER
 
     collection_iterator::collection_iterator(rxConn* _conn,
                                              const path& _p,
@@ -81,8 +85,8 @@ namespace irods::experimental::filesystem
                                    std::to_string(ec) + ']'};
         }
 
-        irods::at_scope_exit<std::function<void()> at_scope_exit{[e] {
-            if (entry) {
+        irods::at_scope_exit<std::function<void()>> at_scope_exit{[e] {
+            if (e) {
                 freeCollEnt(e);
             }
         }};
